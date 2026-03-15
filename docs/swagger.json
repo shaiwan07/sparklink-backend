@@ -1,0 +1,1482 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Sparklink Dating API",
+    "version": "1.0.0",
+    "description": "API documentation for Sparklink Dating app."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "paths": {
+      "/api/profile/delete": {
+        "post": {
+          "summary": "Delete user account",
+          "tags": ["Account"],
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "200": {
+              "description": "Account deleted",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/profile/settings": {
+        "post": {
+          "summary": "Update user settings/privacy",
+          "tags": ["Account"],
+          "security": [{ "bearerAuth": [] }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Settings updated",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                }
+              }
+            },
+            "400": {
+              "description": "No settings provided",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/video-calls": {
+        "post": {
+          "summary": "Schedule a video call",
+          "tags": ["VideoCalls"],
+          "security": [{ "bearerAuth": [] }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "match_id": { "type": "integer" },
+                    "scheduled_time": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Video call scheduled",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                }
+              }
+            },
+            "400": {
+              "description": "match_id and scheduled_time required",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "summary": "Get all video calls for user",
+          "tags": ["VideoCalls"],
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "200": {
+              "description": "Video calls fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "boolean" },
+                      "message": { "type": "string" },
+                      "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/VideoCall" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/video-calls/status": {
+        "post": {
+          "summary": "Update video call status",
+          "tags": ["VideoCalls"],
+          "security": [{ "bearerAuth": [] }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "call_id": { "type": "integer" },
+                    "status": { "type": "string", "enum": ["pending", "completed", "cancelled"] }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Video call status updated",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                }
+              }
+            },
+            "400": {
+              "description": "call_id and status required",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/rewards": {
+        "get": {
+          "summary": "Get all rewards",
+          "tags": ["Rewards"],
+          "responses": {
+            "200": {
+              "description": "Rewards fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "boolean" },
+                      "message": { "type": "string" },
+                      "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/Reward" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/user-offers": {
+        "get": {
+          "summary": "Get user offers",
+          "tags": ["Rewards"],
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "200": {
+              "description": "User offers fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "boolean" },
+                      "message": { "type": "string" },
+                      "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/UserOffer" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/user-offers/redeem": {
+        "post": {
+          "summary": "Redeem an offer",
+          "tags": ["Rewards"],
+          "security": [{ "bearerAuth": [] }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "offer_id": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Offer redeemed",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                }
+              }
+            },
+            "400": {
+              "description": "offer_id required",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/notifications": {
+        "get": {
+          "summary": "Get all notifications for user",
+          "tags": ["Notifications"],
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "200": {
+              "description": "Notifications fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "boolean" },
+                      "message": { "type": "string" },
+                      "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/Notification" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/notifications/read": {
+        "post": {
+          "summary": "Mark notification as read",
+          "tags": ["Notifications"],
+          "security": [{ "bearerAuth": [] }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "notification_id": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Notification marked as read",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                }
+              }
+            },
+            "400": {
+              "description": "notification_id required",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/matches/like": {
+        "post": {
+          "summary": "Like a user",
+          "tags": ["Matches"],
+          "security": [{ "bearerAuth": [] }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user2_id": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Like sent or matched",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                }
+              }
+            },
+            "400": {
+              "description": "user2_id required",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/matches/dislike": {
+        "post": {
+          "summary": "Dislike a user",
+          "tags": ["Matches"],
+          "security": [{ "bearerAuth": [] }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user2_id": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Dislike sent",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                }
+              }
+            },
+            "400": {
+              "description": "user2_id required",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/matches": {
+        "get": {
+          "summary": "Get all matches for user",
+          "tags": ["Matches"],
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "200": {
+              "description": "Matches fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "boolean" },
+                      "message": { "type": "string" },
+                      "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/Match" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/matches/unmatch": {
+        "post": {
+          "summary": "Unmatch a user",
+          "tags": ["Matches"],
+          "security": [{ "bearerAuth": [] }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user2_id": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Unmatched",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                }
+              }
+            },
+            "400": {
+              "description": "user2_id required",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/matches/block": {
+        "post": {
+          "summary": "Block a user",
+          "tags": ["Matches"],
+          "security": [{ "bearerAuth": [] }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user2_id": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Blocked",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                }
+              }
+            },
+            "400": {
+              "description": "user2_id required",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/questions": {
+        "get": {
+          "summary": "Get all questionnaire questions",
+          "tags": ["Questionnaire"],
+          "responses": {
+            "200": {
+              "description": "Questions fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "boolean" },
+                      "message": { "type": "string" },
+                      "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/Question" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/questionnaire": {
+        "post": {
+          "summary": "Submit questionnaire answers",
+          "tags": ["Questionnaire"],
+          "security": [{ "bearerAuth": [] }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "answers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "question_id": { "type": "integer" },
+                          "answer": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Answers submitted",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                }
+              }
+            },
+            "400": {
+              "description": "No answers provided",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/questionnaire/{userId}": {
+        "get": {
+          "summary": "Get questionnaire answers for a user",
+          "tags": ["Questionnaire"],
+          "parameters": [
+            {
+              "name": "userId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "integer" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "User answers fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "boolean" },
+                      "message": { "type": "string" },
+                      "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/QuestionnaireAnswer" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+    "/api/profile": {
+      "get": {
+        "summary": "Get user profile (all info, interests, preferences, location, photos)",
+        "tags": ["Profile"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Profile fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "$ref": "#/components/schemas/User" },
+                        "interests": { "type": "array", "items": { "$ref": "#/components/schemas/Interest" } },
+                        "location": { "$ref": "#/components/schemas/Location" },
+                        "preferences": { "$ref": "#/components/schemas/Preference" },
+                        "photos": { "type": "array", "items": { "$ref": "#/components/schemas/UserPhoto" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Profile not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user profile (partial update, all fields optional)",
+        "tags": ["Profile"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phone_number": { "type": "string" },
+                  "full_name": { "type": "string" },
+                  "age": { "type": "integer" },
+                  "gender": { "type": "string", "enum": ["male", "female", "other"] },
+                  "city": { "type": "string" },
+                  "bio": { "type": "string" },
+                  "language": { "type": "string" },
+                  "interests": { "type": "array", "items": { "type": "integer" } },
+                  "interested_in": { "type": "string", "enum": ["male", "female", "other", "all"] },
+                  "min_age": { "type": "integer" },
+                  "max_age": { "type": "integer" },
+                  "min_height": { "type": "integer" },
+                  "max_height": { "type": "integer" },
+                  "max_distance_km": { "type": "integer" },
+                  "latitude": { "type": "number" },
+                  "longitude": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+      "/api/interests": {
+        "get": {
+          "summary": "Get all interests (with icon support)",
+          "tags": ["Interests"],
+          "responses": {
+            "200": {
+              "description": "Interests fetched",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "boolean" },
+                      "message": { "type": "string" },
+                      "data": {
+                        "type": "array",
+                        "items": { "$ref": "#/components/schemas/Interest" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+    "/api/profile/photo": {
+      "post": {
+        "summary": "Upload profile photo to Cloudinary",
+        "tags": ["Profile"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "photo": { "type": "string", "format": "binary" }
+                },
+                "required": ["photo"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Photo uploaded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "No file uploaded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+          "post": {
+            "summary": "Send OTP to email for password reset",
+            "tags": ["Authentication"],
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "email": { "type": "string", "format": "email" }
+                    },
+                    "required": ["email"]
+                  }
+                }
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "OTP sent to email",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                  }
+                }
+              },
+              "404": {
+                "description": "User not found",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                  }
+                }
+              },
+              "500": {
+                "description": "Server error",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/auth/reset-password": {
+          "post": {
+            "summary": "Reset password using OTP",
+            "tags": ["Authentication"],
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "email": { "type": "string", "format": "email" },
+                      "otp": { "type": "string" },
+                      "newPassword": { "type": "string", "format": "password" }
+                    },
+                    "required": ["email", "otp", "newPassword"]
+                  }
+                }
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Password reset successful",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/SuccessResponse" }
+                  }
+                }
+              },
+              "401": {
+                "description": "Invalid OTP",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                  }
+                }
+              },
+              "404": {
+                "description": "User not found",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                  }
+                }
+              },
+              "500": {
+                "description": "Server error",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                  }
+                }
+              }
+            }
+          }
+        },
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify-email": {
+      "post": {
+        "summary": "Verify email with OTP (required before login)",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid OTP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login with email and password",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+        "VideoCall": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "match_id": { "type": "integer" },
+            "scheduled_time": { "type": "string", "format": "date-time" },
+            "status": { "type": "string", "enum": ["pending", "completed", "cancelled"] },
+            "created_at": { "type": "string", "format": "date-time" },
+            "user1_id": { "type": "integer" },
+            "user2_id": { "type": "integer" }
+          }
+        },
+        "Reward": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "discount_percent": { "type": "integer" },
+            "qr_code_url": { "type": "string" },
+            "expiration_date": { "type": "string", "format": "date" }
+          }
+        },
+        "UserOffer": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "user_id": { "type": "integer" },
+            "offer_id": { "type": "integer" },
+            "redeemed_at": { "type": "string", "format": "date-time" },
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "discount_percent": { "type": "integer" },
+            "qr_code_url": { "type": "string" },
+            "expiration_date": { "type": "string", "format": "date" }
+          }
+        },
+        "Notification": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "user_id": { "type": "integer" },
+            "type": { "type": "string", "enum": ["match", "alert", "meeting", "reward"] },
+            "message": { "type": "string" },
+            "is_read": { "type": "boolean" },
+            "created_at": { "type": "string", "format": "date-time" }
+          }
+        },
+        "Match": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "user1_id": { "type": "integer" },
+            "user2_id": { "type": "integer" },
+            "status": { "type": "string", "enum": ["pending", "matched", "unmatched", "blocked"] },
+            "created_at": { "type": "string", "format": "date-time" }
+          }
+        },
+        "Question": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "text": { "type": "string" },
+            "type": { "type": "string", "enum": ["single_choice", "scale", "text"] }
+          }
+        },
+        "QuestionnaireAnswer": {
+          "type": "object",
+          "properties": {
+            "question_id": { "type": "integer" },
+            "text": { "type": "string" },
+            "type": { "type": "string" },
+            "answer": { "type": "string" }
+          }
+        },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "email": { "type": "string" },
+          "phone_number": { "type": "string" },
+          "full_name": { "type": "string" },
+          "age": { "type": "integer" },
+          "gender": { "type": "string" },
+          "city": { "type": "string" },
+          "bio": { "type": "string" },
+          "profile_photo_url": { "type": "string" },
+          "language": { "type": "string" },
+          "is_verified": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "UserPhoto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "photo_url": { "type": "string" }
+        }
+      },
+      "Interest": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "icon_url": { "type": "string", "description": "URL of the interest icon" }
+        }
+      },
+      "Location": {
+        "type": "object",
+        "properties": {
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" }
+        }
+      },
+      "Preference": {
+        "type": "object",
+        "properties": {
+          "interested_in": { "type": "string" },
+          "min_age": { "type": "integer" },
+          "max_age": { "type": "integer" },
+          "min_height": { "type": "integer" },
+          "max_height": { "type": "integer" },
+          "max_distance_km": { "type": "integer" }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "Password@123"
+          },
+          "confirmPassword": {
+            "type": "string",
+            "format": "password",
+            "example": "Password@123"
+          }
+        },
+        "required": ["email", "password", "confirmPassword"]
+      },
+      "VerifyEmailRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "otp": {
+            "type": "string",
+            "example": "123456"
+          }
+        },
+        "required": ["email", "otp"]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Login successful"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            }
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Operation successful"
+          },
+          "data": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Something went wrong"
+          },
+          "data": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      }
+    }
+  }
+}

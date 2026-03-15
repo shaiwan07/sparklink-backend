@@ -1,0 +1,304 @@
+{
+  "info": {
+    "_postman_id": "sparklink-dating-api-collection-full",
+    "name": "Sparklink Dating API (Full Complete)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+
+    {
+      "name": "Auth - Register",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": {"raw": "{{baseUrl}}/auth/register","host": ["{{baseUrl}}"],"path": ["auth","register"]},
+        "body": {"mode": "raw","raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password@123\",\n  \"confirmPassword\": \"Password@123\"\n}"}
+      }
+    },
+
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": {"raw": "{{baseUrl}}/auth/login","host": ["{{baseUrl}}"],"path": ["auth","login"]},
+        "body": {"mode": "raw","raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password@123\"\n}"}
+      }
+    },
+
+    {
+      "name": "Auth - Verify Email",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": {"raw": "{{baseUrl}}/auth/verify-email","host": ["{{baseUrl}}"],"path": ["auth","verify-email"]},
+        "body": {"mode": "raw","raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}"}
+      }
+    },
+
+    {
+      "name": "Auth - Forgot Password",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": {"raw": "{{baseUrl}}/auth/forgot-password","host": ["{{baseUrl}}"],"path": ["auth","forgot-password"]},
+        "body": {"mode": "raw","raw": "{\n  \"email\": \"user@example.com\"\n}"}
+      }
+    },
+
+    {
+      "name": "Auth - Reset Password",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": {"raw": "{{baseUrl}}/auth/reset-password","host": ["{{baseUrl}}"],"path": ["auth","reset-password"]},
+        "body": {"mode": "raw","raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"Password@123\"\n}"}
+      }
+    },
+
+    {
+      "name": "Profile - Get Profile",
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+        "url": {"raw": "{{baseUrl}}/api/profile","host": ["{{baseUrl}}"],"path": ["api","profile"]}
+      }
+    },
+
+    {
+      "name": "Profile - Update Profile",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/profile","host": ["{{baseUrl}}"],"path": ["api","profile"]},
+        "body": {"mode": "raw","raw": "{\n  \"full_name\": \"Test User\",\n  \"age\": 25\n}"}
+      }
+    },
+
+    {
+      "name": "Profile - Upload Photo",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+        "url": {"raw": "{{baseUrl}}/api/profile/photo","host": ["{{baseUrl}}"],"path": ["api","profile","photo"]}
+      }
+    },
+
+    {
+      "name": "Profile - Delete Account",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+        "url": {"raw": "{{baseUrl}}/api/profile/delete","host": ["{{baseUrl}}"],"path": ["api","profile","delete"]}
+      }
+    },
+
+    {
+      "name": "Profile - Update Settings",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/profile/settings","host": ["{{baseUrl}}"],"path": ["api","profile","settings"]},
+        "body": {"mode": "raw","raw": "{\n  \"privacy\": \"private\"\n}"}
+      }
+    },
+
+    {
+      "name": "Interests - Get All",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{baseUrl}}/api/interests","host": ["{{baseUrl}}"],"path": ["api","interests"]}
+      }
+    },
+
+    {
+      "name": "Questionnaire - Get Questions",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{baseUrl}}/api/questions","host": ["{{baseUrl}}"],"path": ["api","questions"]}
+      }
+    },
+
+    {
+      "name": "Questionnaire - Submit Answers",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/questionnaire","host": ["{{baseUrl}}"],"path": ["api","questionnaire"]},
+        "body": {"mode": "raw","raw": "{\n  \"answers\": [{\"question_id\": 1, \"answer\": \"Casual dating\"}]\n}"}
+      }
+    },
+
+    {
+      "name": "Questionnaire - Get User Answers",
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+        "url": {"raw": "{{baseUrl}}/api/questionnaire/1","host": ["{{baseUrl}}"],"path": ["api","questionnaire","1"]}
+      }
+    },
+
+    {
+      "name": "Matches - Get Matches",
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+        "url": {"raw": "{{baseUrl}}/api/matches","host": ["{{baseUrl}}"],"path": ["api","matches"]}
+      }
+    },
+
+    {
+      "name": "Matches - Like User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/matches/like","host": ["{{baseUrl}}"],"path": ["api","matches","like"]},
+        "body": {"mode": "raw","raw": "{\n  \"user2_id\": 2\n}"}
+      }
+    },
+
+    {
+      "name": "Matches - Dislike User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/matches/dislike","host": ["{{baseUrl}}"],"path": ["api","matches","dislike"]},
+        "body": {"mode": "raw","raw": "{\n  \"user2_id\": 2\n}"}
+      }
+    },
+
+    {
+      "name": "Matches - Unmatch User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/matches/unmatch","host": ["{{baseUrl}}"],"path": ["api","matches","unmatch"]},
+        "body": {"mode": "raw","raw": "{\n  \"user2_id\": 2\n}"}
+      }
+    },
+
+    {
+      "name": "Matches - Block User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/matches/block","host": ["{{baseUrl}}"],"path": ["api","matches","block"]},
+        "body": {"mode": "raw","raw": "{\n  \"user2_id\": 2\n}"}
+      }
+    },
+
+    {
+      "name": "Notifications - Get",
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+        "url": {"raw": "{{baseUrl}}/api/notifications","host": ["{{baseUrl}}"],"path": ["api","notifications"]}
+      }
+    },
+
+    {
+      "name": "Notifications - Mark as Read",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/notifications/read","host": ["{{baseUrl}}"],"path": ["api","notifications","read"]},
+        "body": {"mode": "raw","raw": "{\n  \"notification_id\": 1\n}"}
+      }
+    },
+
+    {
+      "name": "Rewards - Get All",
+      "request": {
+        "method": "GET",
+        "url": {"raw": "{{baseUrl}}/api/rewards","host": ["{{baseUrl}}"],"path": ["api","rewards"]}
+      }
+    },
+
+    {
+      "name": "User Offers - Get",
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+        "url": {"raw": "{{baseUrl}}/api/user-offers","host": ["{{baseUrl}}"],"path": ["api","user-offers"]}
+      }
+    },
+
+    {
+      "name": "User Offers - Redeem",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/user-offers/redeem","host": ["{{baseUrl}}"],"path": ["api","user-offers","redeem"]},
+        "body": {"mode": "raw","raw": "{\n  \"offer_id\": 1\n}"}
+      }
+    },
+
+    {
+      "name": "Video Calls - Get",
+      "request": {
+        "method": "GET",
+        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+        "url": {"raw": "{{baseUrl}}/api/video-calls","host": ["{{baseUrl}}"],"path": ["api","video-calls"]}
+      }
+    },
+
+    {
+      "name": "Video Calls - Schedule",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/video-calls","host": ["{{baseUrl}}"],"path": ["api","video-calls"]},
+        "body": {"mode": "raw","raw": "{\n  \"match_id\": 1,\n  \"scheduled_time\": \"2026-02-23T10:00:00Z\"\n}"}
+      }
+    },
+
+    {
+      "name": "Video Calls - Update Status",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/video-calls/status","host": ["{{baseUrl}}"],"path": ["api","video-calls","status"]},
+        "body": {"mode": "raw","raw": "{\n  \"call_id\": 1,\n  \"status\": \"completed\"\n}"}
+      }
+    }
+
+  ],
+  "event": [],
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:3000"},
+    {"key": "token", "value": "your-jwt-token-here"}
+  ]
+}
