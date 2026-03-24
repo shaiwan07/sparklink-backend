@@ -10,6 +10,7 @@ exports.getQuestions = async (req, res) => {
     const questions = await Question.getAll();
     res.status(200).json(apiResponse({ status: true, message: 'Questions fetched', data: questions }));
   } catch (err) {
+    console.log(err,'err')
     res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
   }
 };
