@@ -41,11 +41,12 @@ exports.register = async (req, res) => {
     const otp = generateOTP();
     await EmailOTP.createOTP(userId, otp);
     // Send OTP email using helper and template
-    await sendMail({
-      to: email,
-      subject: 'Sparklink Email Verification',
-      html: otpTemplate(otp)
-    });
+    
+    // await sendMail({
+    //   to: email,
+    //   subject: 'Sparklink Email Verification',
+    //   html: otpTemplate(otp)
+    // });
     return res.status(201).json(apiResponse({ status: true, message: MSG.USER_REGISTERED, data: [] }));
   } catch (err) {
     console.log(err);
