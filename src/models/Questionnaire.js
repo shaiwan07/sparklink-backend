@@ -2,7 +2,7 @@ const pool = require('../config/db');
 
 const Question = {
   async getAll() {
-    const [rows] = await pool.query('SELECT * FROM Questions');
+    const [rows] = await pool.query('SELECT * FROM questions');
     return rows;
   }
 };
@@ -12,14 +12,14 @@ const Questionnaire = {
     // answers: [{ question_id, answer }]
     for (const ans of answers) {
       await pool.query(
-        'INSERT INTO Questionnaire (user_id, question_id, answer) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE answer=?',
+        'INSERT INTO questionnaire (user_id, question_id, answer) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE answer=?',
         [user_id, ans.question_id, ans.answer, ans.answer]
       );
     }
   },
   async getUserAnswers(user_id) {
     const [rows] = await pool.query(
-      'SELECT q.id as question_id, q.text, q.type, qa.answer FROM Questions q LEFT JOIN Questionnaire qa ON q.id = qa.question_id AND qa.user_id = ?',[user_id]
+      'SELECT q.id as question_id, q.text, q.type, qa.answer FROM questions q LEFT JOIN questionnaire qa ON q.id = qa.question_id AND qa.user_id = ?',[user_id]
     );
     return rows;
   }
