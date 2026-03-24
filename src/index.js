@@ -7,6 +7,12 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 
+
+app.get('/', (req, res) => {
+  res.send('Sparklink API is running 🚀');
+});
+
+
 // Profile routes
 const profileRoutes = require('./routes/profile');
 app.use('/api', profileRoutes);
