@@ -74,8 +74,12 @@
           {"key": "Content-Type", "value": "application/json"}
         ],
         "url": {"raw": "{{baseUrl}}/api/profile","host": ["{{baseUrl}}"],"path": ["api","profile"]},
-        "body": {"mode": "raw","raw": "{\n  \"full_name\": \"Test User\",\n  \"age\": 25\n}"}
-      }
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone_number\": \"+972 78 123 4567\",\n  \"full_name\": \"Test User\",\n  \"age\": 25,\n  \"gender\": \"male\",\n  \"city\": \"Tel Aviv\",\n  \"bio\": \"Please write your bio\",\n  \"language\": \"English\",\n  \"current_step\": 3,\n  \"interests\": [1,2,3],\n  \"interested_in\": \"female\",\n  \"min_age\": 18,\n  \"max_age\": 30,\n  \"min_height\": 150,\n  \"max_height\": 200,\n  \"max_distance_km\": 30,\n  \"latitude\": 32.0853,\n  \"longitude\": 34.7818\n}"
+        }
+      },
+      "description": "All fields are optional. Use current_step to track onboarding progress. For photo upload, use the 'Profile - Upload Photo' endpoint. Images are now saved to DigitalOcean Spaces."
     },
 
     {
