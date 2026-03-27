@@ -10,7 +10,7 @@ const s3 = new AWS.S3({
 });
 
 /**
- * Uploads a file to DigitalOcean Spaces
+ * Uploads a file to DigitalOcean Spaces 
  * @param {Object} params
  * @param {Object} params.file - Multer file object (with .buffer)
  * @param {string} params.folder - Folder in Spaces (default: 'uploads')

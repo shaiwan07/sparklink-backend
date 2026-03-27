@@ -95,5 +95,4 @@ exports.uploadProfilePhoto = async (req, res) => {
   }
 };
 
-
 // Get all interests with icon support
