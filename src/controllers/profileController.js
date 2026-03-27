@@ -5,7 +5,6 @@ const Interest = require('../models/Interest');
 const Location = require('../models/Location');
 const Preference = require('../models/Preference');
 const customUploader = require('../helpers/customUploader');
-const cloudinary = require('../helpers/cloudinary');
 const MSG = require('../constants/error');
 
 function apiResponse({ status, message, data }) {
@@ -35,7 +34,7 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const allowedFields = ['phone_number', 'full_name', 'age', 'gender', 'city', 'bio', 'language'];
+    const allowedFields = ['phone_number', 'full_name', 'age', 'gender', 'city', 'bio', 'language', 'current_step'];
     const updateUser = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) updateUser[field] = req.body[field];

@@ -1,37 +1,39 @@
-const cloudinary = require('./cloudinary');
-const fs = require('fs');
+const AWS = require('aws-sdk');
+const { v4: uuidv4 } = require('uuid');
+
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACE_ENDPOINT);
+const s3 = new AWS.S3({
+  endpoint: spacesEndpoint,
+  accessKeyId: process.env.DO_SPACE_KEY,
+  secretAccessKey: process.env.DO_SPACE_SECRET,
+  region: process.env.DO_SPACE_REGION,
+});
 
 /**
- * Uploads a file to Cloudinary and deletes old image if provided
+ * Uploads a file to DigitalOcean Spaces
  * @param {Object} params
- * @param {Object} params.file - Multer file object (with .path)
- * @param {string|null} params.oldUrl - Previous Cloudinary URL (optional)
- * @param {string} params.folder - Cloudinary folder (default: 'uploads')
+ * @param {Object} params.file - Multer file object (with .buffer)
+ * @param {string} params.folder - Folder in Spaces (default: 'uploads')
  * @returns {Promise<string|null>} - Uploaded image URL
  */
-const customUploader = async ({ file, oldUrl = null, folder = 'uploads' }) => {
-  let uploadedUrl = null;
-  if (file && file.path) {
-    if (oldUrl) {
-      const folderPattern = folder.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
-      const publicIdMatch = oldUrl.match(new RegExp(`${folderPattern}/([^./]+)\\.[a-zA-Z0-9]+$`));
-      if (publicIdMatch && publicIdMatch[1]) {
-        try {
-          await cloudinary.uploader.destroy(`${folder}/${publicIdMatch[1]}`);
-        } catch (e) {
-          console.log('Cloudinary delete error:', e);
-        }
-      }
-    }
-    const uploadResult = await cloudinary.uploader.upload(file.path, { folder });
-    uploadedUrl = uploadResult.secure_url;
-    try {
-      fs.unlinkSync(file.path);
-    } catch (e) {
-      console.log('Error deleting local file:', e);
-    }
+const customUploader = async ({ file, folder = 'uploads' }) => {
+  if (!file || !file.buffer) return null;
+  const fileExt = file.originalname.split('.').pop();
+  const fileName = `${folder}/${uuidv4()}.${fileExt}`;
+  const params = {
+    Bucket: process.env.DO_SPACE_NAME,
+    Key: fileName,
+    Body: file.buffer,
+    ACL: 'public-read',
+    ContentType: file.mimetype,
+  };
+  try {
+    await s3.putObject(params).promise();
+    return `${process.env.DO_SPACE_ENDPOINT}/${process.env.DO_SPACE_NAME}/${fileName}`;
+  } catch (err) {
+    console.error('DigitalOcean upload error:', err);
+    return null;
   }
-  return uploadedUrl;
 };
 
 module.exports = customUploader;

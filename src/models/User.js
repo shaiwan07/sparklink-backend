@@ -26,6 +26,17 @@ const User = {
   // Dynamic update for any fields (sets: 'field1=?, field2=?', values: [..., userId])
   async updateFields(sets, values) {
     await pool.query(`UPDATE users SET ${sets} WHERE id=?`, values);
+  },
+
+  // Get current step for a user
+  async getCurrentStep(userId) {
+    const [rows] = await pool.query('SELECT current_step FROM users WHERE id=?', [userId]);
+    return rows[0]?.current_step || 1;
+  },
+
+  // Set current step for a user
+  async setCurrentStep(userId, step) {
+    await pool.query('UPDATE users SET current_step=? WHERE id=?', [step, userId]);
   }
 };
 
