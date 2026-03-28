@@ -34,11 +34,7 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-<<<<<<< HEAD
-    const allowedFields = ['phone_number', 'full_name', 'age', 'gender', 'city', 'bio', 'language'];
-=======
     const allowedFields = ['phone_number', 'full_name', 'age', 'gender', 'city', 'bio', 'language', 'current_step'];
->>>>>>> c278bfc8acd84570a73309588181fc15edf2e492
     const updateUser = {};
     for (const field of allowedFields) {
       if (req.body[field] !== undefined) updateUser[field] = req.body[field];
@@ -99,8 +95,4 @@ exports.uploadProfilePhoto = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD
-
-=======
->>>>>>> c278bfc8acd84570a73309588181fc15edf2e492
 // Get all interests with icon support
