@@ -817,6 +817,7 @@
                   "city": { "type": "string" },
                   "bio": { "type": "string" },
                   "language": { "type": "string" },
+                  "current_step": { "type": "integer", "description": "Current onboarding step (1-7)" },
                   "interests": { "type": "array", "items": { "type": "integer" } },
                   "interested_in": { "type": "string", "enum": ["male", "female", "other", "all"] },
                   "min_age": { "type": "integer" },
