@@ -103,7 +103,14 @@ exports.verifyEmail = async (req, res) => {
       await User.verify(user.id);
     }
     await EmailOTP.deleteOTP(user.id);
-    return res.status(200).json(apiResponse({ status: true, message: 'Email verified', data: [] }));
+    // Generate JWT token and return user data (same as login)
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const { password_hash, ...userData } = user;
+    return res.status(200).json(apiResponse({
+      status: true,
+      message: 'Email verified',
+      data: [{ token, user: userData }]
+    }));
   } catch (err) {
     return res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
   }
