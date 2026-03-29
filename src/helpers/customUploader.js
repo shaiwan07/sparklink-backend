@@ -1,12 +1,14 @@
-const AWS = require('aws-sdk');
+
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
 
-const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACE_ENDPOINT);
-const s3 = new AWS.S3({
-  endpoint: spacesEndpoint,
-  accessKeyId: process.env.DO_SPACE_KEY,
-  secretAccessKey: process.env.DO_SPACE_SECRET,
-  region: process.env.DO_SPACE_REGION,
+const s3 = new S3Client({
+  endpoint: process.env.DO_SPACE_ENDPOINT,
+  region: 'us-east-1', // Required by AWS SDK v3, value is ignored by DO Spaces
+  credentials: {
+    accessKeyId: process.env.DO_SPACE_KEY,
+    secretAccessKey: process.env.DO_SPACE_SECRET,
+  },
 });
 
 /**
@@ -20,15 +22,15 @@ const customUploader = async ({ file, folder = 'uploads' }) => {
   if (!file || !file.buffer) return null;
   const fileExt = file.originalname.split('.').pop();
   const fileName = `${folder}/${uuidv4()}.${fileExt}`;
-  const params = {
+  const command = new PutObjectCommand({
     Bucket: process.env.DO_SPACE_NAME,
     Key: fileName,
     Body: file.buffer,
     ACL: 'public-read',
     ContentType: file.mimetype,
-  };
+  });
   try {
-    await s3.putObject(params).promise();
+    await s3.send(command);
     return `${process.env.DO_SPACE_ENDPOINT}/${process.env.DO_SPACE_NAME}/${fileName}`;
   } catch (err) {
     console.error('DigitalOcean upload error:', err);

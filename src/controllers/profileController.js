@@ -32,7 +32,6 @@ exports.getProfile = async (req, res) => {
 
 
 exports.updateProfile = async (req, res) => {
-  console.log('this one', req.body)
   try {
     const userId = req.user.id;
     const allowedFields = ['phone_number', 'full_name', 'age', 'gender', 'city', 'bio', 'language', 'current_step'];
@@ -70,7 +69,6 @@ exports.updateProfile = async (req, res) => {
     }
     res.status(200).json(apiResponse({ status: true, message: 'Profile updated', data: [] }));
   } catch (err) {
-    console.log(err);
     res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
   }
 };
@@ -100,6 +98,7 @@ exports.uploadProfilePhoto = async (req, res) => {
     }
     res.status(200).json(apiResponse({ status: true, message: 'Photos uploaded', data: photoUrls }));
   } catch (err) {
+    console.log(err,'err')
     res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
   }
 };
