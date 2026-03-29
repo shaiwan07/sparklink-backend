@@ -80,6 +80,7 @@ exports.login = async (req, res) => {
       data: [{ token, user: userData }]
     }));
   } catch (err) {
+    console.log(err);
     return res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
   }
 };
