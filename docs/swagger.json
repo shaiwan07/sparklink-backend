@@ -896,7 +896,7 @@
       },
     "/api/profile/photo": {
       "post": {
-        "summary": "Upload profile photo to Cloudinary",
+        "summary": "Upload one or more profile photos (DigitalOcean Spaces)",
         "tags": ["Profile"],
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
@@ -906,16 +906,20 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "photo": { "type": "string", "format": "binary" }
+                  "files": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "binary" },
+                    "description": "One or more image files"
+                  }
                 },
-                "required": ["photo"]
+                "required": ["files"]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Photo uploaded",
+            "description": "Photos uploaded",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/SuccessResponse" }
@@ -923,7 +927,7 @@
             }
           },
           "400": {
-            "description": "No file uploaded",
+            "description": "No files uploaded",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }

@@ -86,9 +86,24 @@
       "name": "Profile - Upload Photo",
       "request": {
         "method": "POST",
-        "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "files",
+              "type": "file",
+              "src": "",
+              "description": "Select one or more image files",
+              "disabled": false
+            }
+          ]
+        },
         "url": {"raw": "{{baseUrl}}/api/profile/photo","host": ["{{baseUrl}}"],"path": ["api","profile","photo"]}
-      }
+      },
+      "description": "Upload one or more profile photos. Use 'files' as the form-data key. Images are saved to DigitalOcean Spaces."
     },
 
     {
