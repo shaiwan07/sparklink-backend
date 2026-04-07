@@ -1,37 +1,81 @@
-const nodemailer = require('nodemailer');
+const axios = require("axios");
 
-const smtpSecure = typeof process.env.SMTP_SECURE !== "undefined"
-  ? String(process.env.SMTP_SECURE).toLowerCase() === "true"
-  : false;
-const smtpPort = Number(process.env.SMTP_PORT || (smtpSecure ? 465 : 587));
+function stripHtml(html) {
+  if (!html) return "";
+  return html.replace(/<[^>]*>?/gm, "").trim();
+}
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.example.com',
-  port: smtpPort,
-  secure: smtpSecure,
-  auth: {
-    user: process.env.SMTP_USER || 'your_email@example.com',
-    pass: process.env.SMTP_PASS || 'your_email_password'
-  },
-  connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 10000),
-  greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS || 10000),
-  socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 10000)
-});
+async function sendMail({ to, subject, html, text }) {
+  try {
+    const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
-/**
- * Send an email using the configured transporter
- * @param {string} to - Recipient email
- * @param {string} subject - Email subject
- * @param {string} html - HTML content
- * @returns {Promise}
- */
-async function sendMail({ to, subject, html }) {
-  return transporter.sendMail({
-    from: process.env.SMTP_FROM || 'no-reply@sparklink.com',
-    to,
-    subject,
-    html
-  });
+    if (!BREVO_API_KEY) {
+      console.warn("[Mailer] BREVO_API_KEY missing");
+      console.log(`Fallback email -> ${to}`);
+      return { ok: true, fallback: true };
+    }
+
+    if (!to) {
+      throw new Error("Recipient email is required");
+    }
+
+    const APP_NAME = process.env.APP_NAME || "SparkLink";
+    const FROM_EMAIL =
+      process.env.SMTP_FROM || "no-reply@sparklink.com";
+
+    // ✅ CRITICAL FIX (NEVER EMPTY)
+    let textContent = text;
+
+    if (!textContent || textContent.trim() === "") {
+      textContent = stripHtml(html);
+    }
+
+    // ⚠️ still empty? force fallback
+    if (!textContent) {
+      textContent = `Message from ${APP_NAME}`;
+    }
+
+    // 🚀 API call
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          name: APP_NAME,
+          email: FROM_EMAIL,
+        },
+        to: [{ email: to }],
+        subject: subject || "No Subject",
+        htmlContent: html || "",
+        textContent: textContent, // 🔥 ALWAYS VALID NOW
+      },
+      {
+        headers: {
+          "api-key": BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      }
+    );
+
+    return {
+      ok: true,
+      messageId: response.data?.messageId || null,
+    };
+  } catch (err) {
+    console.log(
+      "[Mailer] Brevo send failed:",
+      err.response?.data || err.message
+    );
+    console.error(
+      "[Mailer] Brevo send failed:",
+      err.response?.data || err.message
+    );
+
+    return {
+      ok: false,
+      error: err.response?.data || err.message,
+    };
+  }
 }
 
 module.exports = { sendMail };

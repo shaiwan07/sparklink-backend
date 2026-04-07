@@ -8,6 +8,7 @@ const MSG = require('../constants/error');
 const { generateOTP } = require('../helpers/common');
 const EmailOTP = require('../models/EmailOTP');
 const bcrypt = require('bcrypt');
+const forgotPasswordTemplate = require('../helpers/forgotPasswordTemplate');
 
 function apiResponse({ status, message, data }) {
   return { status, message, data };
@@ -28,7 +29,7 @@ exports.forgotPassword = async (req, res) => {
     await sendMail({
       to: email,
       subject: 'Sparklink Password Reset',
-      html: `<p>Your password reset OTP is: <b>${otp}</b></p>`
+      html: forgotPasswordTemplate(otp)
     });
     return res.status(200).json(apiResponse({ status: true, message: 'OTP sent to email', data: [] }));
   } catch (err) {
