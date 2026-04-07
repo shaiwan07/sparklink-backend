@@ -718,7 +718,8 @@
                         "type": "object",
                         "properties": {
                           "question_id": { "type": "integer" },
-                          "answer": { "type": "string" }
+                          "option_id": { "type": "integer", "description": "For single_choice questions, the selected option id." },
+                          "answer": { "type": "string", "description": "For scale/text questions, the answer value." }
                         }
                       }
                     }
@@ -1358,7 +1359,18 @@
           "properties": {
             "id": { "type": "integer" },
             "text": { "type": "string" },
-            "type": { "type": "string", "enum": ["single_choice", "scale", "text"] }
+            "type": { "type": "string", "enum": ["single_choice", "scale", "text"] },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "integer" },
+                  "text": { "type": "string" }
+                }
+              },
+              "description": "List of options for single_choice questions. Empty for scale/text."
+            }
           }
         },
         "QuestionnaireAnswer": {
@@ -1367,7 +1379,9 @@
             "question_id": { "type": "integer" },
             "text": { "type": "string" },
             "type": { "type": "string" },
-            "answer": { "type": "string" }
+            "option_id": { "type": "integer", "nullable": true },
+            "option_text": { "type": "string", "nullable": true },
+            "answer": { "type": "string", "nullable": true }
           }
         },
       "User": {
