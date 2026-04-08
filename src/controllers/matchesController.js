@@ -5,7 +5,6 @@ const UserPhoto = require('../models/UserPhoto');
 const { getDistanceFromLatLonInKm } = require('../helpers/locationHelper');
 const { calculateMatchPercentage } = require('../helpers/matchHelper');
 const UserInterest = require('../models/Interest');
-const Preference = require('../models/Preference');
 const { Questionnaire } = require('../models/Questionnaire');
 
 exports.getPotentialMatches = async (req, res) => {
