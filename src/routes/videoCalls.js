@@ -9,5 +9,7 @@ router.post('/video-calls', auth, videoCallController.scheduleCall);
 router.get('/video-calls', auth, videoCallController.getUserCalls);
 // Update video call status
 router.post('/video-calls/status', auth, videoCallController.updateStatus);
+// Get scheduled call for a specific match
+router.get('/video-calls/:match_id', auth, videoCallController.getCallByMatchId);
 
 module.exports = router;

@@ -53,6 +53,14 @@ app.use('/api', videoCallsRoutes);
 const accountRoutes = require('./routes/account');
 app.use('/api', accountRoutes);
 
+// Gap Report routes
+const gapReportRoutes = require('./routes/gapReport');
+app.use('/api', gapReportRoutes);
+
+// Report routes
+const reportRoutes = require('./routes/report');
+app.use('/api', reportRoutes);
+
 // Swagger setup
 const swaggerDocument = JSON.parse(
   fs.readFileSync(path.join(__dirname, '../docs/swagger.json'))

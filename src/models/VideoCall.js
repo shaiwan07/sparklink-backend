@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 
+
 const VideoCall = {
   async schedule(match_id, scheduled_time) {
     await pool.query(
@@ -13,6 +14,13 @@ const VideoCall = {
       [user_id, user_id]
     );
     return rows;
+  },
+  async getByMatchId(match_id) {
+    const [rows] = await pool.query(
+      'SELECT * FROM videocalls WHERE match_id = ? ORDER BY scheduled_time DESC LIMIT 1',
+      [match_id]
+    );
+    return rows[0] || null;
   },
   async updateStatus(call_id, status) {
     await pool.query(
