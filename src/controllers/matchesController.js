@@ -3,6 +3,10 @@ const Preference = require('../models/Preference');
 const Location = require('../models/Location');
 const UserPhoto = require('../models/UserPhoto');
 const { getDistanceFromLatLonInKm } = require('../helpers/locationHelper');
+const { calculateMatchPercentage } = require('../helpers/matchHelper');
+const UserInterest = require('../models/Interest');
+const Preference = require('../models/Preference');
+const { Questionnaire } = require('../models/Questionnaire');
 
 exports.getPotentialMatches = async (req, res) => {
   try {
@@ -31,11 +35,20 @@ exports.getPotentialMatches = async (req, res) => {
         parseFloat(userLocation.latitude), parseFloat(userLocation.longitude),
         parseFloat(candidateLocation.latitude), parseFloat(candidateLocation.longitude)
       );
+      const roundedDistance = Math.round(distance * 10) / 10;
       if (distance <= preferences.max_distance_km) {
         const photos = await UserPhoto.getAll(candidate.id);
+        // Calculate match percentage (interests, preferences, questionnaire)
+        const match_percentage = await calculateMatchPercentage(
+          userId,
+          candidate.id,
+          UserInterest,
+          Preference,
+          Questionnaire
+        );
         // Remove sensitive fields
         const { password_hash, ...safeCandidate } = candidate;
-        matches.push({ ...safeCandidate, distance, photos });
+        matches.push({ ...safeCandidate, distance: roundedDistance, match_percentage, photos });
       }
     }
     res.status(200).json({ status: true, message: 'Matches found', data: matches });
