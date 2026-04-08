@@ -28,7 +28,6 @@ exports.getUserCalls = async (req, res) => {
   }
 };
 
-
 exports.getCallByMatchId = async (req, res) => {
   try {
     const { match_id } = req.params;
@@ -40,6 +39,19 @@ exports.getCallByMatchId = async (req, res) => {
       return res.status(404).json(apiResponse({ status: false, message: 'No scheduled call found', data: [] }));
     }
     res.status(200).json(apiResponse({ status: true, message: 'Scheduled call fetched', data: call }));
+  } catch (err) {
+    res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
+  }
+};
+
+exports.updateStatus = async (req, res) => {
+  try {
+    const { call_id, status } = req.body;
+    if (!call_id || !status) {
+      return res.status(400).json(apiResponse({ status: false, message: 'call_id and status required', data: [] }));
+    }
+    await VideoCall.updateStatus(call_id, status);
+    res.status(200).json(apiResponse({ status: true, message: 'Video call status updated', data: [] }));
   } catch (err) {
     res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
   }
