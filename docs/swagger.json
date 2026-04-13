@@ -2,1398 +2,15 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Sparklink Dating API",
-    "version": "1.0.0",
-    "description": "API documentation for Sparklink Dating app."
+    "description": "Smart Links, Real Connections — Full API for the Sparklink mobile application",
+    "version": "2.0.0"
   },
   "servers": [
     {
-      "url": "http://139.59.17.235:5000"
+      "url": "http://localhost:3000",
+      "description": "Local development"
     }
   ],
-  "paths": {
-      "/api/profile/delete": {
-        "post": {
-          "summary": "Delete user account",
-          "tags": ["Account"],
-          "security": [{ "bearerAuth": [] }],
-          "responses": {
-            "200": {
-              "description": "Account deleted",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/profile/settings": {
-        "post": {
-          "summary": "Update user settings/privacy",
-          "tags": ["Account"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Settings updated",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                }
-              }
-            },
-            "400": {
-              "description": "No settings provided",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/video-calls": {
-        "post": {
-          "summary": "Schedule a video call",
-          "tags": ["VideoCalls"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "match_id": { "type": "integer" },
-                    "scheduled_time": { "type": "string", "format": "date-time" }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Video call scheduled",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                }
-              }
-            },
-            "400": {
-              "description": "match_id and scheduled_time required",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        },
-        "get": {
-          "summary": "Get all video calls for user",
-          "tags": ["VideoCalls"],
-          "security": [{ "bearerAuth": [] }],
-          "responses": {
-            "200": {
-              "description": "Video calls fetched",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "boolean" },
-                      "message": { "type": "string" },
-                      "data": {
-                        "type": "array",
-                        "items": { "$ref": "#/components/schemas/VideoCall" }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/video-calls/status": {
-        "post": {
-          "summary": "Update video call status",
-          "tags": ["VideoCalls"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "call_id": { "type": "integer" },
-                    "status": { "type": "string", "enum": ["pending", "completed", "cancelled"] }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Video call status updated",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                }
-              }
-            },
-            "400": {
-              "description": "call_id and status required",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/rewards": {
-        "get": {
-          "summary": "Get all rewards",
-          "tags": ["Rewards"],
-          "responses": {
-            "200": {
-              "description": "Rewards fetched",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "boolean" },
-                      "message": { "type": "string" },
-                      "data": {
-                        "type": "array",
-                        "items": { "$ref": "#/components/schemas/Reward" }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/user-offers": {
-        "get": {
-          "summary": "Get user offers",
-          "tags": ["Rewards"],
-          "security": [{ "bearerAuth": [] }],
-          "responses": {
-            "200": {
-              "description": "User offers fetched",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "boolean" },
-                      "message": { "type": "string" },
-                      "data": {
-                        "type": "array",
-                        "items": { "$ref": "#/components/schemas/UserOffer" }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/user-offers/redeem": {
-        "post": {
-          "summary": "Redeem an offer",
-          "tags": ["Rewards"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "offer_id": { "type": "integer" }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Offer redeemed",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                }
-              }
-            },
-            "400": {
-              "description": "offer_id required",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/notifications": {
-        "get": {
-          "summary": "Get all notifications for user",
-          "tags": ["Notifications"],
-          "security": [{ "bearerAuth": [] }],
-          "responses": {
-            "200": {
-              "description": "Notifications fetched",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "boolean" },
-                      "message": { "type": "string" },
-                      "data": {
-                        "type": "array",
-                        "items": { "$ref": "#/components/schemas/Notification" }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/notifications/read": {
-        "post": {
-          "summary": "Mark notification as read",
-          "tags": ["Notifications"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "notification_id": { "type": "integer" }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Notification marked as read",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                }
-              }
-            },
-            "400": {
-              "description": "notification_id required",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/matches/potential": {
-        "get": {
-          "summary": "Get potential matches for user",
-          "tags": ["Matches"],
-          "security": [{ "bearerAuth": [] }],
-          "responses": {
-            "200": {
-              "description": "Potential matches fetched",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "boolean" },
-                      "message": { "type": "string" },
-                      "data": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "user": { "$ref": "#/components/schemas/User" },
-                            "interests": { "type": "array", "items": { "$ref": "#/components/schemas/Interest" } },
-                            "location": { "$ref": "#/components/schemas/Location" },
-                            "preferences": { "$ref": "#/components/schemas/Preference" },
-                            "photos": { "type": "array", "items": { "$ref": "#/components/schemas/UserPhoto" } }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/matches/like": {
-        "post": {
-          "summary": "Like a user",
-          "tags": ["Matches"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user2_id": { "type": "integer" }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Like sent or matched",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                }
-              }
-            },
-            "400": {
-              "description": "user2_id required",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/matches/dislike": {
-        "post": {
-          "summary": "Dislike a user",
-          "tags": ["Matches"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user2_id": { "type": "integer" }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Dislike sent",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                }
-              }
-            },
-            "400": {
-              "description": "user2_id required",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/matches": {
-        "get": {
-          "summary": "Get all matches for user",
-          "tags": ["Matches"],
-          "security": [{ "bearerAuth": [] }],
-          "responses": {
-            "200": {
-              "description": "Matches fetched",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "boolean" },
-                      "message": { "type": "string" },
-                      "data": {
-                        "type": "array",
-                        "items": { "$ref": "#/components/schemas/Match" }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/matches/unmatch": {
-        "post": {
-          "summary": "Unmatch a user",
-          "tags": ["Matches"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user2_id": { "type": "integer" }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Unmatched",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                }
-              }
-            },
-            "400": {
-              "description": "user2_id required",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/matches/block": {
-        "post": {
-          "summary": "Block a user",
-          "tags": ["Matches"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user2_id": { "type": "integer" }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Blocked",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                }
-              }
-            },
-            "400": {
-              "description": "user2_id required",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/questions": {
-        "get": {
-          "summary": "Get all questionnaire questions",
-          "tags": ["Questionnaire"],
-          "responses": {
-            "200": {
-              "description": "Questions fetched",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "boolean" },
-                      "message": { "type": "string" },
-                      "data": {
-                        "type": "array",
-                        "items": { "$ref": "#/components/schemas/Question" }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/questionnaire": {
-        "post": {
-          "summary": "Submit questionnaire answers",
-          "tags": ["Questionnaire"],
-          "security": [{ "bearerAuth": [] }],
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "answers": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "question_id": { "type": "integer" },
-                          "option_id": { "type": "integer", "description": "For single_choice questions, the selected option id." },
-                          "answer": { "type": "string", "description": "For scale/text questions, the answer value." }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "responses": {
-            "200": {
-              "description": "Answers submitted",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                }
-              }
-            },
-            "400": {
-              "description": "No answers provided",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/questionnaire/{userId}": {
-        "get": {
-          "summary": "Get questionnaire answers for a user",
-          "tags": ["Questionnaire"],
-          "parameters": [
-            {
-              "name": "userId",
-              "in": "path",
-              "required": true,
-              "schema": { "type": "integer" }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "User answers fetched",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "boolean" },
-                      "message": { "type": "string" },
-                      "data": {
-                        "type": "array",
-                        "items": { "$ref": "#/components/schemas/QuestionnaireAnswer" }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-    "/api/profile": {
-      "get": {
-        "summary": "Get user profile (all info, interests, preferences, location, photos)",
-        "tags": ["Profile"],
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Profile fetched",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "profile": {
-                      "type": "object",
-                      "properties": {
-                        "user": { "$ref": "#/components/schemas/User" },
-                        "interests": { "type": "array", "items": { "$ref": "#/components/schemas/Interest" } },
-                        "location": { "$ref": "#/components/schemas/Location" },
-                        "preferences": { "$ref": "#/components/schemas/Preference" },
-                        "photos": { "type": "array", "items": { "$ref": "#/components/schemas/UserPhoto" } }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Profile not found",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "summary": "Update user profile (partial update, all fields optional)",
-        "tags": ["Profile"],
-        "security": [{ "bearerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "phone_number": { "type": "string" },
-                  "full_name": { "type": "string" },
-                  "age": { "type": "integer" },
-                  "gender": { "type": "string", "enum": ["male", "female", "other"] },
-                  "city": { "type": "string" },
-                  "bio": { "type": "string" },
-                  "language": { "type": "string" },
-                  "current_step": { "type": "integer", "description": "Current onboarding step (1-7)" },
-                  "interests": { "type": "array", "items": { "type": "integer" } },
-                  "interested_in": { "type": "string", "enum": ["male", "female", "other", "all"] },
-                  "min_age": { "type": "integer" },
-                  "max_age": { "type": "integer" },
-                  "min_height": { "type": "integer" },
-                  "max_height": { "type": "integer" },
-                  "max_distance_km": { "type": "integer" },
-                  "latitude": { "type": "number" },
-                  "longitude": { "type": "number" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Profile updated",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-      "/api/interests": {
-        "get": {
-          "summary": "Get all interests (with icon support)",
-          "tags": ["Interests"],
-          "responses": {
-            "200": {
-              "description": "Interests fetched",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "status": { "type": "boolean" },
-                      "message": { "type": "string" },
-                      "data": {
-                        "type": "array",
-                        "items": { "$ref": "#/components/schemas/Interest" }
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "500": {
-              "description": "Server error",
-              "content": {
-                "application/json": {
-                  "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                }
-              }
-            }
-          }
-        }
-      },
-    "/api/profile/photo": {
-      "post": {
-        "summary": "Upload one or more profile photos (DigitalOcean Spaces)",
-        "tags": ["Profile"],
-        "security": [{ "bearerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "files": {
-                    "type": "array",
-                    "items": { "type": "string", "format": "binary" },
-                    "description": "One or more image files"
-                  }
-                },
-                "required": ["files"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Photos uploaded",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-              }
-            }
-          },
-          "400": {
-            "description": "No files uploaded",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/forgot-password": {
-          "post": {
-            "summary": "Send OTP to email for password reset",
-            "tags": ["Authentication"],
-            "requestBody": {
-              "required": true,
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "email": { "type": "string", "format": "email" }
-                    },
-                    "required": ["email"]
-                  }
-                }
-              }
-            },
-            "responses": {
-              "200": {
-                "description": "OTP sent to email",
-                "content": {
-                  "application/json": {
-                    "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                  }
-                }
-              },
-              "404": {
-                "description": "User not found",
-                "content": {
-                  "application/json": {
-                    "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                  }
-                }
-              },
-              "500": {
-                "description": "Server error",
-                "content": {
-                  "application/json": {
-                    "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "/auth/reset-password": {
-          "post": {
-            "summary": "Reset password using OTP",
-            "tags": ["Authentication"],
-            "requestBody": {
-              "required": true,
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "email": { "type": "string", "format": "email" },
-                      "otp": { "type": "string" },
-                      "newPassword": { "type": "string", "format": "password" }
-                    },
-                    "required": ["email", "otp", "newPassword"]
-                  }
-                }
-              }
-            },
-            "responses": {
-              "200": {
-                "description": "Password reset successful",
-                "content": {
-                  "application/json": {
-                    "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-                  }
-                }
-              },
-              "401": {
-                "description": "Invalid OTP",
-                "content": {
-                  "application/json": {
-                    "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                  }
-                }
-              },
-              "404": {
-                "description": "User not found",
-                "content": {
-                  "application/json": {
-                    "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                  }
-                }
-              },
-              "500": {
-                "description": "Server error",
-                "content": {
-                  "application/json": {
-                    "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-                  }
-                }
-              }
-            }
-          }
-        },
-    "/auth/register": {
-      "post": {
-        "summary": "Register a new user",
-        "tags": ["Authentication"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "User registered successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Email already registered",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/verify-email": {
-      "post": {
-        "summary": "Verify email with OTP (required before login)",
-        "tags": ["Authentication"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyEmailRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Email verified successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid OTP",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/login": {
-      "post": {
-        "summary": "Login with email and password",
-        "tags": ["Authentication"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Login successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Missing email or password",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Email not verified",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/gap-report/{matchId}": {
-      "get": {
-        "summary": "Get gap report for a match",
-        "tags": ["GapReport"],
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "matchId",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Gap report fetched",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/gap-report/{matchId}/reasons": {
-      "get": {
-        "summary": "Get match reasons for a match",
-        "tags": ["GapReport"],
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "matchId",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Match reasons fetched",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/report": {
-      "post": {
-        "summary": "Report a user for harassment or other reasons",
-        "tags": ["Report"],
-        "security": [{ "bearerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "reportedUserId": { "type": "integer" },
-                  "reporterUserId": { "type": "integer" },
-                  "reason": { "type": "string" },
-                  "details": { "type": "string" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Report submitted",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/SuccessResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Failed to submit report",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
   "components": {
     "securitySchemes": {
       "bearerAuth": {
@@ -1403,247 +20,1444 @@
       }
     },
     "schemas": {
-        "VideoCall": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "match_id": { "type": "integer" },
-            "scheduled_time": { "type": "string", "format": "date-time" },
-            "status": { "type": "string", "enum": ["pending", "completed", "cancelled"] },
-            "created_at": { "type": "string", "format": "date-time" },
-            "user1_id": { "type": "integer" },
-            "user2_id": { "type": "integer" }
+      "Slot": {
+        "type": "object",
+        "required": [
+          "day_of_week",
+          "start_time",
+          "end_time"
+        ],
+        "properties": {
+          "day_of_week": {
+            "type": "string",
+            "enum": [
+              "Mon",
+              "Tue",
+              "Wed",
+              "Thu",
+              "Fri",
+              "Sat",
+              "Sun"
+            ]
+          },
+          "start_time": {
+            "type": "string",
+            "example": "09:00:00"
+          },
+          "end_time": {
+            "type": "string",
+            "example": "12:00:00"
           }
-        },
-        "Reward": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "name": { "type": "string" },
-            "description": { "type": "string" },
-            "discount_percent": { "type": "integer" },
-            "qr_code_url": { "type": "string" },
-            "expiration_date": { "type": "string", "format": "date" }
-          }
-        },
-        "UserOffer": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "user_id": { "type": "integer" },
-            "offer_id": { "type": "integer" },
-            "redeemed_at": { "type": "string", "format": "date-time" },
-            "name": { "type": "string" },
-            "description": { "type": "string" },
-            "discount_percent": { "type": "integer" },
-            "qr_code_url": { "type": "string" },
-            "expiration_date": { "type": "string", "format": "date" }
-          }
-        },
-        "Notification": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "user_id": { "type": "integer" },
-            "type": { "type": "string", "enum": ["match", "alert", "meeting", "reward"] },
-            "message": { "type": "string" },
-            "is_read": { "type": "boolean" },
-            "created_at": { "type": "string", "format": "date-time" }
-          }
-        },
-        "Match": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "user1_id": { "type": "integer" },
-            "user2_id": { "type": "integer" },
-            "status": { "type": "string", "enum": ["pending", "matched", "unmatched", "blocked"] },
-            "created_at": { "type": "string", "format": "date-time" }
-          }
-        },
-        "Question": {
-          "type": "object",
-          "properties": {
-            "id": { "type": "integer" },
-            "text": { "type": "string" },
-            "type": { "type": "string", "enum": ["single_choice", "scale", "text"] },
-            "options": {
-              "type": "array",
-              "items": {
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Registration, login, OTP, password reset"
+    },
+    {
+      "name": "Profile",
+      "description": "User profile management"
+    },
+    {
+      "name": "Interests",
+      "description": "Interest tags"
+    },
+    {
+      "name": "Questionnaire",
+      "description": "25-question compatibility questionnaire"
+    },
+    {
+      "name": "Matches",
+      "description": "Swiping, matching, potential matches"
+    },
+    {
+      "name": "Availability",
+      "description": "User availability for video call scheduling"
+    },
+    {
+      "name": "Video Calls",
+      "description": "Schedule and manage video dates"
+    },
+    {
+      "name": "Gap Report",
+      "description": "Compatibility analysis between matched users"
+    },
+    {
+      "name": "Notifications",
+      "description": "In-app notifications"
+    },
+    {
+      "name": "Rewards",
+      "description": "Sparklink Club rewards and QR offers"
+    },
+    {
+      "name": "Report",
+      "description": "Report harassment"
+    },
+    {
+      "name": "Account",
+      "description": "Account settings and deletion"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register with email and password",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
                 "type": "object",
+                "required": [
+                  "email",
+                  "password",
+                  "confirmPassword"
+                ],
                 "properties": {
-                  "id": { "type": "integer" },
-                  "text": { "type": "string" }
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6
+                  },
+                  "confirmPassword": {
+                    "type": "string"
+                  }
                 }
-              },
-              "description": "List of options for single_choice questions. Empty for scale/text."
-            }
-          }
-        },
-        "QuestionnaireAnswer": {
-          "type": "object",
-          "properties": {
-            "question_id": { "type": "integer" },
-            "text": { "type": "string" },
-            "type": { "type": "string" },
-            "option_id": { "type": "integer", "nullable": true },
-            "option_text": { "type": "string", "nullable": true },
-            "answer": { "type": "string", "nullable": true }
-          }
-        },
-      "User": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer" },
-          "email": { "type": "string" },
-          "phone_number": { "type": "string" },
-          "full_name": { "type": "string" },
-          "age": { "type": "integer" },
-          "gender": { "type": "string" },
-          "city": { "type": "string" },
-          "bio": { "type": "string" },
-          "profile_photo_url": { "type": "string" },
-          "language": { "type": "string" },
-          "is_verified": { "type": "boolean" },
-          "created_at": { "type": "string", "format": "date-time" },
-          "updated_at": { "type": "string", "format": "date-time" }
-        }
-      },
-      "UserPhoto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer" },
-          "photo_url": { "type": "string" }
-        }
-      },
-      "Interest": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer" },
-          "name": { "type": "string" },
-          "icon_url": { "type": "string", "description": "URL of the interest icon" }
-        }
-      },
-      "Location": {
-        "type": "object",
-        "properties": {
-          "latitude": { "type": "number" },
-          "longitude": { "type": "number" }
-        }
-      },
-      "Preference": {
-        "type": "object",
-        "properties": {
-          "interested_in": { "type": "string" },
-          "min_age": { "type": "integer" },
-          "max_age": { "type": "integer" },
-          "min_height": { "type": "integer" },
-          "max_height": { "type": "integer" },
-          "max_distance_km": { "type": "integer" }
-        }
-      },
-      "RegisterRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "example": "user@example.com"
-          },
-          "password": {
-            "type": "string",
-            "format": "password",
-            "example": "Password@123"
-          },
-          "confirmPassword": {
-            "type": "string",
-            "format": "password",
-            "example": "Password@123"
-          }
-        },
-        "required": ["email", "password", "confirmPassword"]
-      },
-      "VerifyEmailRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email"
-          },
-          "otp": {
-            "type": "string",
-            "example": "123456"
-          }
-        },
-        "required": ["email", "otp"]
-      },
-      "LoginRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email"
-          },
-          "password": {
-            "type": "string",
-            "format": "password"
-          }
-        },
-        "required": ["email", "password"]
-      },
-      "LoginResponse": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean",
-            "example": true
-          },
-          "message": {
-            "type": "string",
-            "example": "Login successful"
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "token": {
-                "type": "string",
-                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
               }
             }
           }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered. OTP sent to email."
+          },
+          "409": {
+            "description": "Email already registered"
+          }
         }
-      },
-      "SuccessResponse": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean",
-            "example": true
+      }
+    },
+    "/auth/verify-email": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verify email OTP — screen 07",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "otp"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "otp": {
+                    "type": "string",
+                    "example": "482910"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verified. Returns JWT + user."
           },
-          "message": {
-            "type": "string",
-            "example": "Operation successful"
+          "401": {
+            "description": "Invalid or expired OTP"
+          }
+        }
+      }
+    },
+    "/auth/resend-otp": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Resend verification OTP — screen 07 countdown reset",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP resent"
           },
-          "data": {
-            "type": "object",
-            "nullable": true
+          "400": {
+            "description": "Email already verified"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login with email and password",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login OK. Returns JWT + user."
+          },
+          "401": {
+            "description": "Invalid credentials"
+          },
+          "403": {
+            "description": "Email not verified"
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Request password reset OTP — screen 08",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP sent to email"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Reset password using OTP",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "otp",
+                  "newPassword"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "otp": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 6
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful"
+          },
+          "401": {
+            "description": "Invalid OTP"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Logout — screen 48 (client discards JWT)",
+        "responses": {
+          "200": {
+            "description": "Logged out successfully"
+          }
+        }
+      }
+    },
+    "/api/profile": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get current user full profile (photos, interests, location, preferences)",
+        "responses": {
+          "200": {
+            "description": "Full profile object"
           }
         }
       },
-      "ErrorResponse": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean",
-            "example": false
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Update profile — all onboarding + edit profile fields — screen 49",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "age": {
+                    "type": "integer"
+                  },
+                  "height": {
+                    "type": "integer",
+                    "description": "Height in cm (Preferences screen step 3)"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "male",
+                      "female",
+                      "other"
+                    ]
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "instagram_username": {
+                    "type": "string"
+                  },
+                  "bio": {
+                    "type": "string"
+                  },
+                  "language": {
+                    "type": "string"
+                  },
+                  "current_step": {
+                    "type": "integer",
+                    "description": "Onboarding step 1-6"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  },
+                  "interested_in": {
+                    "type": "string",
+                    "enum": [
+                      "male",
+                      "female",
+                      "other",
+                      "all"
+                    ]
+                  },
+                  "min_age": {
+                    "type": "integer"
+                  },
+                  "max_age": {
+                    "type": "integer"
+                  },
+                  "max_distance_km": {
+                    "type": "integer"
+                  },
+                  "interests": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "description": "Array of interest_id values"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated"
+          }
+        }
+      }
+    },
+    "/api/profile/photo": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Upload up to 5 profile photos — screens 11-12 (multipart/form-data)",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "files": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "maxItems": 5
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Photos uploaded. Returns array of URLs."
           },
-          "message": {
-            "type": "string",
-            "example": "Something went wrong"
+          "400": {
+            "description": "No files uploaded"
+          }
+        }
+      }
+    },
+    "/api/profile/photo/{photoId}": {
+      "delete": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Delete a profile photo — screen 49",
+        "parameters": [
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Photo deleted"
+          }
+        }
+      }
+    },
+    "/api/interests": {
+      "get": {
+        "tags": [
+          "Interests"
+        ],
+        "summary": "Get all interest tags with icons — screen 16 (public)",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "List with interest_id, name, icon_url"
+          }
+        }
+      }
+    },
+    "/api/questions": {
+      "get": {
+        "tags": [
+          "Questionnaire"
+        ],
+        "summary": "Get all 25 questions with category and options — screens 18-42 (public)",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Questions array — each has question_id, text, type, category_name, options[]"
+          }
+        }
+      }
+    },
+    "/api/questionnaire": {
+      "post": {
+        "tags": [
+          "Questionnaire"
+        ],
+        "summary": "Submit questionnaire answers",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "answers"
+                ],
+                "properties": {
+                  "answers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "question_id": {
+                          "type": "integer"
+                        },
+                        "option_id": {
+                          "type": "integer",
+                          "description": "For single_choice questions"
+                        },
+                        "answer": {
+                          "type": "string",
+                          "description": "For scale questions — numeric string e.g. \"3\""
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Answers saved (upserted per question)"
           },
-          "data": {
-            "type": "object",
-            "nullable": true
+          "400": {
+            "description": "No answers provided"
+          }
+        }
+      }
+    },
+    "/api/questionnaire/{userId}": {
+      "get": {
+        "tags": [
+          "Questionnaire"
+        ],
+        "summary": "Get a user answers",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User answers with question text and option text"
+          }
+        }
+      }
+    },
+    "/api/matches": {
+      "get": {
+        "tags": [
+          "Matches"
+        ],
+        "summary": "Get all confirmed matches for current user",
+        "responses": {
+          "200": {
+            "description": "Matches list — each includes match_id, matched_user_id"
+          }
+        }
+      }
+    },
+    "/api/matches/potential": {
+      "get": {
+        "tags": [
+          "Matches"
+        ],
+        "summary": "Get potential matches filtered by preferences + distance + compatibility % — screen 44",
+        "responses": {
+          "200": {
+            "description": "Candidates sorted by match_percentage desc — each has distance_km, match_percentage, photos[]"
+          },
+          "400": {
+            "description": "Profile/preferences/location incomplete"
+          }
+        }
+      }
+    },
+    "/api/matches/like": {
+      "post": {
+        "tags": [
+          "Matches"
+        ],
+        "summary": "Like a user — swipe right (writes to swipes table, auto-creates match if mutual)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user_id"
+                ],
+                "properties": {
+                  "user_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "result: \"liked\" or \"matched\""
+          }
+        }
+      }
+    },
+    "/api/matches/superlike": {
+      "post": {
+        "tags": [
+          "Matches"
+        ],
+        "summary": "Superlike a user (writes to swipes table, auto-creates match if mutual)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user_id"
+                ],
+                "properties": {
+                  "user_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "result: \"superliked\" or \"matched\""
+          }
+        }
+      }
+    },
+    "/api/matches/dislike": {
+      "post": {
+        "tags": [
+          "Matches"
+        ],
+        "summary": "Dislike a user — swipe left",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user_id"
+                ],
+                "properties": {
+                  "user_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Disliked"
+          }
+        }
+      }
+    },
+    "/api/matches/unmatch": {
+      "post": {
+        "tags": [
+          "Matches"
+        ],
+        "summary": "Unmatch — sets status to unmatched",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "match_id"
+                ],
+                "properties": {
+                  "match_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Unmatched"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/api/matches/block": {
+      "post": {
+        "tags": [
+          "Matches"
+        ],
+        "summary": "Block a matched user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "match_id"
+                ],
+                "properties": {
+                  "match_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Blocked"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/api/matches/{matchId}/profile": {
+      "get": {
+        "tags": [
+          "Matches"
+        ],
+        "summary": "Full profile of matched user with compatibility analysis — screens 50-51",
+        "parameters": [
+          {
+            "name": "matchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "user + photos + interests + match_percentage + gap_report + match_reasons"
+          },
+          "403": {
+            "description": "Not your match"
+          }
+        }
+      }
+    },
+    "/api/matches/{matchId}/contact": {
+      "get": {
+        "tags": [
+          "Matches"
+        ],
+        "summary": "Get phone and Instagram of matched user — screen 55 (It is a Match!)",
+        "parameters": [
+          {
+            "name": "matchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "{ phone, instagram_username }"
+          },
+          "403": {
+            "description": "Not your match"
+          }
+        }
+      }
+    },
+    "/api/availability": {
+      "get": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "Get my availability slots — screen 52",
+        "responses": {
+          "200": {
+            "description": "Array of { id, day_of_week, start_time, end_time }"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "Set my availability — screen 52 (replaces all existing slots)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "slots"
+                ],
+                "properties": {
+                  "slots": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Slot"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "slots": [
+                  {
+                    "day_of_week": "Mon",
+                    "start_time": "09:00:00",
+                    "end_time": "12:00:00"
+                  },
+                  {
+                    "day_of_week": "Mon",
+                    "start_time": "14:00:00",
+                    "end_time": "18:00:00"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Availability updated"
+          },
+          "400": {
+            "description": "Invalid slot format"
+          }
+        }
+      }
+    },
+    "/api/availability/overlap/{matchId}": {
+      "get": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "Get overlapping time slots with a match — screens 52-53. Add ?day=Mon to filter by day.",
+        "parameters": [
+          {
+            "name": "matchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "day",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat",
+                "Sun"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of { overlap_start, overlap_end }. Empty = screen 53 no-overlap state."
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/api/availability/{userId}": {
+      "get": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "Get a matched user availability — screen 52 match side",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Match slots"
+          },
+          "403": {
+            "description": "Not a match — access denied"
+          }
+        }
+      }
+    },
+    "/api/video-calls": {
+      "post": {
+        "tags": [
+          "Video Calls"
+        ],
+        "summary": "Schedule a video call — screen 52 (Schedule Call button)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "match_id",
+                  "scheduled_time"
+                ],
+                "properties": {
+                  "match_id": {
+                    "type": "integer"
+                  },
+                  "scheduled_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2026-04-15T10:00:00"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Video call scheduled with status=scheduled"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Video Calls"
+        ],
+        "summary": "Get all my video calls — screen 45 Alerts tab",
+        "responses": {
+          "200": {
+            "description": "Video calls with match info"
+          }
+        }
+      }
+    },
+    "/api/video-calls/status": {
+      "post": {
+        "tags": [
+          "Video Calls"
+        ],
+        "summary": "Update call status (scheduled / completed / cancelled / failed)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "call_id",
+                  "status"
+                ],
+                "properties": {
+                  "call_id": {
+                    "type": "integer"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "scheduled",
+                      "completed",
+                      "cancelled",
+                      "failed"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status updated"
+          }
+        }
+      }
+    },
+    "/api/video-calls/{match_id}": {
+      "get": {
+        "tags": [
+          "Video Calls"
+        ],
+        "summary": "Get scheduled call for a specific match",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Call details"
+          },
+          "404": {
+            "description": "No call found"
+          }
+        }
+      }
+    },
+    "/api/video-calls/{callId}/feedback": {
+      "post": {
+        "tags": [
+          "Video Calls"
+        ],
+        "summary": "Post-call feedback — screen 56 (Love it / Not a Match buttons)",
+        "parameters": [
+          {
+            "name": "callId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "feedback"
+                ],
+                "properties": {
+                  "feedback": {
+                    "type": "string",
+                    "enum": [
+                      "love_it",
+                      "not_a_match"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Feedback recorded. not_a_match also unmatches the two users."
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Call not found"
+          }
+        }
+      }
+    },
+    "/api/gap-report/{matchId}": {
+      "get": {
+        "tags": [
+          "Gap Report"
+        ],
+        "summary": "Per-category compatibility scores computed from questionnaire answers — screen 54",
+        "parameters": [
+          {
+            "name": "matchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of { category: string, percent: number }"
+          },
+          "403": {
+            "description": "Not authorized"
+          }
+        }
+      }
+    },
+    "/api/gap-report/{matchId}/reasons": {
+      "get": {
+        "tags": [
+          "Gap Report"
+        ],
+        "summary": "Why Do We Match? — reason strings for screens 50-51",
+        "parameters": [
+          {
+            "name": "matchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of reason strings (high-scoring categories + gap notes)"
+          }
+        }
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Get all notifications for current user — screen 45",
+        "responses": {
+          "200": {
+            "description": "List with id, type (match/message/call/reward), message, is_read"
+          }
+        }
+      }
+    },
+    "/api/notifications/read-all": {
+      "put": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark ALL notifications as read",
+        "responses": {
+          "200": {
+            "description": "All notifications marked read"
+          }
+        }
+      }
+    },
+    "/api/notifications/read": {
+      "put": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark ONE notification as read",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "notification_id"
+                ],
+                "properties": {
+                  "notification_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notification marked as read"
+          }
+        }
+      }
+    },
+    "/api/rewards": {
+      "get": {
+        "tags": [
+          "Rewards"
+        ],
+        "summary": "Get all active Sparklink Club rewards — screen 46 (public)",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "List with reward_id, name, description, discount_percent, qr_code_url, expiration_date"
+          }
+        }
+      }
+    },
+    "/api/rewards/my-offers": {
+      "get": {
+        "tags": [
+          "Rewards"
+        ],
+        "summary": "Get rewards already redeemed by the current user",
+        "responses": {
+          "200": {
+            "description": "Redeemed offers with full reward details"
+          }
+        }
+      }
+    },
+    "/api/rewards/redeem": {
+      "post": {
+        "tags": [
+          "Rewards"
+        ],
+        "summary": "Redeem a reward — screen 47 (tap QR code button)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reward_id"
+                ],
+                "properties": {
+                  "reward_id": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Redeemed — returns reward details including qr_code_url"
+          },
+          "404": {
+            "description": "Reward not found or expired"
+          },
+          "409": {
+            "description": "Already redeemed this reward"
+          }
+        }
+      }
+    },
+    "/api/report": {
+      "post": {
+        "tags": [
+          "Report"
+        ],
+        "summary": "Report a user for harassment — screen 56 (Report Harasser button)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reported_id",
+                  "reason"
+                ],
+                "properties": {
+                  "reported_id": {
+                    "type": "integer",
+                    "description": "user_id of the user being reported"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "example": "Harassment during video call"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Report submitted"
+          },
+          "400": {
+            "description": "reported_id and reason required"
+          }
+        }
+      }
+    },
+    "/api/profile/delete": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Delete account permanently — screen 48 (cascades all user data)",
+        "responses": {
+          "200": {
+            "description": "Account deleted"
+          }
+        }
+      }
+    },
+    "/api/profile/settings": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Update account settings e.g. language",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "language": {
+                    "type": "string",
+                    "example": "en"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings updated"
+          }
+        }
+      }
+    },
+    "/api/profile/fcm-token": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Register or refresh device FCM push token",
+        "description": "Call this on app launch (or when FCM refreshes the token) to enable push notifications.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "fcm_token"
+                ],
+                "properties": {
+                  "fcm_token": {
+                    "type": "string",
+                    "example": "eXaMpLeFcMtOkEn..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "FCM token registered"
+          },
+          "400": {
+            "description": "fcm_token missing"
+          },
+          "401": {
+            "description": "Unauthorized"
           }
         }
       }

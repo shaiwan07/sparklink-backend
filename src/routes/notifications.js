@@ -3,9 +3,8 @@ const router = express.Router();
 const notificationController = require('../controllers/notificationController');
 const auth = require('../middleware/auth');
 
-// Get notifications
 router.get('/notifications', auth, notificationController.getNotifications);
-// Mark notification as read
-router.post('/notifications/read', auth, notificationController.markAsRead);
+router.put('/notifications/read-all', auth, notificationController.markAllAsRead);
+router.put('/notifications/read', auth, notificationController.markAsRead);
 
 module.exports = router;

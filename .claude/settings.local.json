@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"require\\('./src/index.js'\\)\")",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(node -e ':*)",
+      "Bash(node generate-swagger.js)"
+    ]
+  }
+}

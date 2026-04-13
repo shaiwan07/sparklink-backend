@@ -1,16 +1,21 @@
 const pool = require('../config/db');
 
 const User = {
-  async updatePassword(userId, password_hash) {
-    await pool.query('UPDATE users SET password_hash=? WHERE id=?', [password_hash, userId]);
+  async findById(userId) {
+    const [rows] = await pool.query('SELECT * FROM users WHERE user_id = ?', [userId]);
+    return rows[0] || null;
   },
-  async verify(userId) {
-    await pool.query('UPDATE users SET is_verified=1 WHERE id=?', [userId]);
-  },
+
   async findByEmail(email) {
     const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    return rows[0];
+    return rows[0] || null;
   },
+
+  async findByPhone(phone) {
+    const [rows] = await pool.query('SELECT * FROM users WHERE phone = ?', [phone]);
+    return rows[0] || null;
+  },
+
   async create({ email, password_hash }) {
     const [result] = await pool.query(
       'INSERT INTO users (email, password_hash) VALUES (?, ?)',
@@ -18,44 +23,56 @@ const User = {
     );
     return result.insertId;
   },
+
   async existsByEmail(email) {
-    const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+    const [rows] = await pool.query('SELECT user_id FROM users WHERE email = ?', [email]);
     return rows.length > 0;
   },
 
-  // Dynamic update for any fields (sets: 'field1=?, field2=?', values: [..., userId])
-  async updateFields(sets, values) {
-    await pool.query(`UPDATE users SET ${sets} WHERE id=?`, values);
+  async existsByPhone(phone) {
+    const [rows] = await pool.query('SELECT user_id FROM users WHERE phone = ?', [phone]);
+    return rows.length > 0;
   },
 
-  // Get current step for a user
+  async verify(userId) {
+    await pool.query('UPDATE users SET is_verified = 1 WHERE user_id = ?', [userId]);
+  },
+
+  async updatePassword(userId, password_hash) {
+    await pool.query('UPDATE users SET password_hash = ? WHERE user_id = ?', [password_hash, userId]);
+  },
+
+  // Dynamic update for whitelisted fields only
+  // sets: 'field1=?, field2=?' — values must have userId as last element
+  async updateFields(sets, values) {
+    await pool.query(`UPDATE users SET ${sets} WHERE user_id = ?`, values);
+  },
+
   async getCurrentStep(userId) {
-    const [rows] = await pool.query('SELECT current_step FROM users WHERE id=?', [userId]);
+    const [rows] = await pool.query('SELECT current_step FROM users WHERE user_id = ?', [userId]);
     return rows[0]?.current_step || 1;
   },
 
-  // Set current step for a user
   async setCurrentStep(userId, step) {
-    await pool.query('UPDATE users SET current_step=? WHERE id=?', [step, userId]);
+    await pool.query('UPDATE users SET current_step = ? WHERE user_id = ?', [step, userId]);
   },
 
-  // Get IDs of users to exclude from matching (blocked, unmatched, already matched, self)
+  // Get user IDs to exclude from matching (already swiped or matched)
   async getExcludedUserIds(userId) {
-    // Exclude self, blocked, unmatched, already matched
-    // You can expand this logic as needed
     const [rows] = await pool.query(`
-      SELECT DISTINCT u.id FROM users u
-      LEFT JOIN matches m1 ON (m1.user1_id = ? AND m1.user2_id = u.id)
-      LEFT JOIN matches m2 ON (m2.user2_id = ? AND m2.user1_id = u.id)
-      WHERE u.id = ? OR m1.id IS NOT NULL OR m2.id IS NOT NULL
+      SELECT DISTINCT to_user AS excluded_id FROM swipes WHERE from_user = ?
+      UNION
+      SELECT DISTINCT from_user AS excluded_id FROM swipes WHERE to_user = ?
+      UNION
+      SELECT ? AS excluded_id
     `, [userId, userId, userId]);
-    return rows.map(r => r.id);
+    return rows.map(r => r.excluded_id);
   },
 
-  // Find users matching preferences (excluding excludedIds)
   async findPotentialMatches({ userId, gender, minAge, maxAge, excludedIds }) {
-    let query = `SELECT * FROM users WHERE id != ?`;
+    let query = `SELECT * FROM users WHERE user_id != ? AND is_verified = 1`;
     const params = [userId];
+
     if (gender && gender !== 'all') {
       query += ' AND gender = ?';
       params.push(gender);
@@ -69,9 +86,10 @@ const User = {
       params.push(maxAge);
     }
     if (excludedIds && excludedIds.length > 0) {
-      query += ` AND id NOT IN (${excludedIds.map(() => '?').join(',')})`;
+      query += ` AND user_id NOT IN (${excludedIds.map(() => '?').join(',')})`;
       params.push(...excludedIds);
     }
+
     const [rows] = await pool.query(query, params);
     return rows;
   }
