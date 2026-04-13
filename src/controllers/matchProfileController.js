@@ -5,7 +5,6 @@ const Interest = require('../models/Interest');
 const Location = require('../models/Location');
 const Preference = require('../models/Preference');
 const { Questionnaire } = require('../models/Questionnaire');
-const UserInterest = require('../models/Interest');
 const { calculateMatchPercentage } = require('../helpers/matchHelper');
 const { GapReport, MatchReasons } = require('../models/GapReport');
 const VideoCall = require('../models/VideoCall');
@@ -39,7 +38,7 @@ exports.getMatchProfile = async (req, res) => {
       Location.get(other_id),
       GapReport.get(matchId),
       MatchReasons.get(matchId),
-      calculateMatchPercentage(my_id, other_id, UserInterest, Preference, Questionnaire)
+      calculateMatchPercentage(my_id, other_id, Interest, Preference, Questionnaire)
     ]);
 
     const { password_hash, phone, instagram_username, ...safeUser } = matchedUser;

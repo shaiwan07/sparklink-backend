@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 11, 2026 at 09:32 AM
+-- Generation Time: Apr 13, 2026 at 05:53 AM
 -- Server version: 8.0.45-0ubuntu0.22.04.1
 -- PHP Version: 8.1.2-1ubuntu2.23
 
@@ -181,18 +181,19 @@ CREATE TABLE `preferences` (
   `interested_in` enum('male','female','other','all') DEFAULT NULL,
   `min_age` int DEFAULT NULL,
   `max_age` int DEFAULT NULL,
-  `max_distance_km` int DEFAULT NULL
+  `max_distance_km` int DEFAULT NULL,
+  `height_cm` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `preferences`
 --
 
-INSERT INTO `preferences` (`id`, `user_id`, `interested_in`, `min_age`, `max_age`, `max_distance_km`) VALUES
-(1, 1, 'male', 25, 35, 50),
-(2, 2, 'male', 24, 35, 30),
-(3, 3, 'female', 22, 30, 100),
-(4, 4, 'female', 22, 32, 80);
+INSERT INTO `preferences` (`id`, `user_id`, `interested_in`, `min_age`, `max_age`, `max_distance_km`, `height_cm`) VALUES
+(1, 1, 'male', 25, 35, 50, NULL),
+(2, 2, 'male', 24, 35, 30, NULL),
+(3, 3, 'female', 22, 30, 100, NULL),
+(4, 4, 'female', 22, 32, 80, NULL);
 
 -- --------------------------------------------------------
 
@@ -393,6 +394,20 @@ INSERT INTO `question_options` (`option_id`, `question_id`, `text`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `reports`
+--
+
+CREATE TABLE `reports` (
+  `report_id` bigint NOT NULL,
+  `reporter_id` bigint NOT NULL,
+  `reported_id` bigint NOT NULL,
+  `reason` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `rewards`
 --
 
@@ -453,24 +468,27 @@ CREATE TABLE `users` (
   `phone` varchar(20) DEFAULT NULL,
   `full_name` varchar(100) DEFAULT NULL,
   `age` int DEFAULT NULL,
+  `height` int DEFAULT NULL,
   `gender` enum('male','female','other') DEFAULT NULL,
   `bio` varchar(500) DEFAULT NULL,
   `profile_photo_url` text,
   `language` varchar(20) DEFAULT NULL,
   `is_verified` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `current_step` int DEFAULT '1',
+  `fcm_token` varchar(512) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `email`, `password_hash`, `phone`, `full_name`, `age`, `gender`, `bio`, `profile_photo_url`, `language`, `is_verified`, `created_at`, `updated_at`) VALUES
-(1, 'belle@example.com', 'hashed123', '9999990001', 'Belle Benson', 28, 'female', 'Love traveling & meaningful connections', 'img1.jpg', NULL, 1, '2026-04-11 09:06:49', '2026-04-11 09:06:49'),
-(2, 'amelia@example.com', 'hashed123', '9999990002', 'Amelia Jones', 25, 'female', 'Music lover and foodie', 'img2.jpg', NULL, 1, '2026-04-11 09:06:49', '2026-04-11 09:06:49'),
-(3, 'john@example.com', 'hashed123', '9999990003', 'John Carter', 30, 'male', 'Fitness & adventure', 'img3.jpg', NULL, 1, '2026-04-11 09:06:49', '2026-04-11 09:06:49'),
-(4, 'alex@example.com', 'hashed123', '9999990004', 'Alex Smith', 27, 'male', 'Tech geek and gamer', 'img4.jpg', NULL, 1, '2026-04-11 09:06:49', '2026-04-11 09:06:49');
+INSERT INTO `users` (`user_id`, `email`, `password_hash`, `phone`, `full_name`, `age`, `height`, `gender`, `bio`, `profile_photo_url`, `language`, `is_verified`, `created_at`, `updated_at`, `current_step`, `fcm_token`) VALUES
+(1, 'belle@example.com', 'hashed123', '9999990001', 'Belle Benson', 28, NULL, 'female', 'Love traveling & meaningful connections', 'img1.jpg', NULL, 1, '2026-04-11 09:06:49', '2026-04-11 09:06:49', 1, NULL),
+(2, 'amelia@example.com', 'hashed123', '9999990002', 'Amelia Jones', 25, NULL, 'female', 'Music lover and foodie', 'img2.jpg', NULL, 1, '2026-04-11 09:06:49', '2026-04-11 09:06:49', 1, NULL),
+(3, 'john@example.com', 'hashed123', '9999990003', 'John Carter', 30, NULL, 'male', 'Fitness & adventure', 'img3.jpg', NULL, 1, '2026-04-11 09:06:49', '2026-04-11 09:06:49', 1, NULL),
+(4, 'alex@example.com', 'hashed123', '9999990004', 'Alex Smith', 27, NULL, 'male', 'Tech geek and gamer', 'img4.jpg', NULL, 1, '2026-04-11 09:06:49', '2026-04-11 09:06:49', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -690,6 +708,14 @@ ALTER TABLE `question_options`
   ADD KEY `question_id` (`question_id`);
 
 --
+-- Indexes for table `reports`
+--
+ALTER TABLE `reports`
+  ADD PRIMARY KEY (`report_id`),
+  ADD KEY `reporter_id` (`reporter_id`),
+  ADD KEY `reported_id` (`reported_id`);
+
+--
 -- Indexes for table `rewards`
 --
 ALTER TABLE `rewards`
@@ -822,6 +848,12 @@ ALTER TABLE `question_options`
   MODIFY `option_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=112;
 
 --
+-- AUTO_INCREMENT for table `reports`
+--
+ALTER TABLE `reports`
+  MODIFY `report_id` bigint NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `rewards`
 --
 ALTER TABLE `rewards`
@@ -922,6 +954,13 @@ ALTER TABLE `questions`
 --
 ALTER TABLE `question_options`
   ADD CONSTRAINT `question_options_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `reports`
+--
+ALTER TABLE `reports`
+  ADD CONSTRAINT `reports_ibfk_1` FOREIGN KEY (`reporter_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `reports_ibfk_2` FOREIGN KEY (`reported_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `swipes`

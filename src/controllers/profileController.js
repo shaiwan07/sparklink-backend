@@ -42,7 +42,7 @@ exports.updateProfile = async (req, res) => {
     const userId = req.user.id;
 
     // Whitelisted user table fields (phone not phone_number, no city — city lives in user_location)
-    const userFields = ['phone', 'full_name', 'age', 'gender', 'bio', 'language', 'current_step'];
+    const userFields = ['phone', 'full_name', 'age', 'height', 'gender', 'bio', 'language', 'instagram_username', 'current_step'];
     const updateUser = {};
     for (const field of userFields) {
       if (req.body[field] !== undefined) updateUser[field] = req.body[field];
@@ -58,8 +58,8 @@ exports.updateProfile = async (req, res) => {
       await Interest.setUserInterests(userId, req.body.interests);
     }
 
-    // Preferences (no height — not in DB)
-    const prefFields = ['interested_in', 'min_age', 'max_age', 'max_distance_km'];
+    // Preferences (height_cm = partner height preference, lives in preferences table)
+    const prefFields = ['interested_in', 'min_age', 'max_age', 'max_distance_km', 'height_cm'];
     const prefData = {};
     for (const field of prefFields) {
       if (req.body[field] !== undefined) prefData[field] = req.body[field];
