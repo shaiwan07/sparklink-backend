@@ -16,12 +16,49 @@ const User = {
     return rows[0] || null;
   },
 
+  async findByFacebookId(facebook_id) {
+    const [rows] = await pool.query('SELECT * FROM users WHERE facebook_id = ?', [facebook_id]);
+    return rows[0] || null;
+  },
+
+  async findByGoogleId(google_id) {
+    const [rows] = await pool.query('SELECT * FROM users WHERE google_id = ?', [google_id]);
+    return rows[0] || null;
+  },
+
   async create({ email, password_hash }) {
     const [result] = await pool.query(
       'INSERT INTO users (email, password_hash) VALUES (?, ?)',
       [email, password_hash]
     );
     return result.insertId;
+  },
+
+  // Create a user who signed up via a social provider (no password required)
+  async createSocialUser({ email, full_name, profile_photo_url, facebook_id, google_id }) {
+    const [result] = await pool.query(
+      `INSERT INTO users
+         (email, full_name, profile_photo_url, facebook_id, google_id, is_verified, password_hash)
+       VALUES (?, ?, ?, ?, ?, 1, '')`,
+      [
+        email          || null,
+        full_name      || null,
+        profile_photo_url || null,
+        facebook_id    || null,
+        google_id      || null,
+      ]
+    );
+    return result.insertId;
+  },
+
+  // Link a social provider ID to an existing account
+  async linkSocialId(userId, { facebook_id, google_id }) {
+    if (facebook_id) {
+      await pool.query('UPDATE users SET facebook_id = ? WHERE user_id = ?', [facebook_id, userId]);
+    }
+    if (google_id) {
+      await pool.query('UPDATE users SET google_id = ? WHERE user_id = ?', [google_id, userId]);
+    }
   },
 
   async existsByEmail(email) {

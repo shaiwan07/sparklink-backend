@@ -1014,17 +1014,18 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "match_id",
-                  "scheduled_time"
+                  "match_id"
                 ],
                 "properties": {
                   "match_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 100
                   },
                   "scheduled_time": {
                     "type": "string",
                     "format": "date-time",
-                    "example": "2026-04-15T10:00:00"
+                    "example": "2026-04-20T10:00:00",
+                    "description": "Optional — omit for an immediate call"
                   }
                 }
               }
@@ -1033,7 +1034,24 @@
         },
         "responses": {
           "200": {
-            "description": "Video call scheduled with status=scheduled"
+            "description": "Call created — returns Agora channel info for both users to join",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Video call ready",
+                  "data": [
+                    {
+                      "call_id": 5,
+                      "channelName": "call_100_1713456789123",
+                      "rtcToken": "006a6bda22cec214e9f...signed_token...",
+                      "uid": 10,
+                      "appId": "a6bda22cec214e9f92bd1621a8a9058c"
+                    }
+                  ]
+                }
+              }
+            }
           }
         }
       },
@@ -1458,6 +1476,128 @@
           },
           "401": {
             "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/facebook": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login or register with Facebook",
+        "description": "Flutter app sends the Facebook access token after the user completes Facebook Login. Backend verifies it with the Graph API, then creates or logs in the user.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "access_token"
+                ],
+                "properties": {
+                  "access_token": {
+                    "type": "string",
+                    "example": "EAABwzLixnjYBO2ZBqF...",
+                    "description": "Short-lived or long-lived Facebook access token from Flutter SDK"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful — returns JWT + user object",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Facebook login successful",
+                  "data": [
+                    {
+                      "token": "eyJhbGci...",
+                      "user": {
+                        "user_id": 1,
+                        "email": "user@example.com",
+                        "full_name": "John Doe"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "access_token missing"
+          },
+          "401": {
+            "description": "Invalid or expired Facebook token"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/auth/google": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login or register with Google",
+        "description": "Flutter app sends the Google ID token after the user completes Google Sign-In. Backend verifies it with Google, then creates or logs in the user.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id_token"
+                ],
+                "properties": {
+                  "id_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJSUzI1NiIs...",
+                    "description": "Google ID token from Flutter google_sign_in SDK"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful — returns JWT + user object",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Google login successful",
+                  "data": [
+                    {
+                      "token": "eyJhbGci...",
+                      "user": {
+                        "user_id": 2,
+                        "email": "user@gmail.com",
+                        "full_name": "Jane Doe"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "id_token missing"
+          },
+          "401": {
+            "description": "Invalid or expired Google ID token"
+          },
+          "500": {
+            "description": "Server error"
           }
         }
       }
