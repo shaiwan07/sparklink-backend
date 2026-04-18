@@ -94,16 +94,49 @@ const User = {
     await pool.query('UPDATE users SET current_step = ? WHERE user_id = ?', [step, userId]);
   },
 
-  // Get user IDs to exclude from matching (already swiped or matched)
+  // Only exclude self + users who blocked / were blocked by this user.
+  // Liked/disliked/matched users are still shown — with interaction_status flag.
   async getExcludedUserIds(userId) {
     const [rows] = await pool.query(`
-      SELECT DISTINCT to_user AS excluded_id FROM swipes WHERE from_user = ?
-      UNION
-      SELECT DISTINCT from_user AS excluded_id FROM swipes WHERE to_user = ?
+      SELECT DISTINCT
+        CASE WHEN user1_id = ? THEN user2_id ELSE user1_id END AS excluded_id
+      FROM matches
+      WHERE (user1_id = ? OR user2_id = ?) AND status = 'blocked'
       UNION
       SELECT ? AS excluded_id
-    `, [userId, userId, userId]);
+    `, [userId, userId, userId, userId]);
     return rows.map(r => r.excluded_id);
+  },
+
+  // Bulk-fetch all swipe + match data for a user in 3 queries.
+  // Returns maps used to compute interaction_status without N+1 queries.
+  async getInteractionMaps(userId) {
+    const [mySwipeRows] = await pool.query(
+      'SELECT to_user, action FROM swipes WHERE from_user = ?',
+      [userId]
+    );
+    const [theirSwipeRows] = await pool.query(
+      'SELECT from_user, action FROM swipes WHERE to_user = ?',
+      [userId]
+    );
+    const [matchRows] = await pool.query(
+      `SELECT user1_id, user2_id FROM matches
+       WHERE (user1_id = ? OR user2_id = ?) AND status = 'matched'`,
+      [userId, userId]
+    );
+
+    const mySwipes = {};
+    for (const r of mySwipeRows) mySwipes[r.to_user] = r.action;
+
+    const theirSwipes = {};
+    for (const r of theirSwipeRows) theirSwipes[r.from_user] = r.action;
+
+    const matchedIds = new Set();
+    for (const r of matchRows) {
+      matchedIds.add(r.user1_id === userId ? r.user2_id : r.user1_id);
+    }
+
+    return { mySwipes, theirSwipes, matchedIds };
   },
 
   async findPotentialMatches({ userId, gender, minAge, maxAge, excludedIds }) {
