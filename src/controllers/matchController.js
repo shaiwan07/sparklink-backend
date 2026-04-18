@@ -58,8 +58,6 @@ exports.likeUser = async (req, res) => {
     }
 
     const to_user = parseInt(user_id);
-    notifyMatch(from_user, to_user);
-    return false;
     const result = await Match.likeUser(from_user, to_user);
 
     if (result.result === 'matched') {
