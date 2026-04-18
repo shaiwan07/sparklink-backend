@@ -13,10 +13,27 @@ const TITLES = {
 const Notification = {
   async getAll(user_id) {
     const [rows] = await pool.query(
-      `SELECT id, user_id, type, message, reference_id, is_read, created_at
-       FROM notifications
-       WHERE user_id = ?
-       ORDER BY created_at DESC`,
+      `SELECT
+         n.id,
+         n.user_id,
+         n.type,
+         n.message,
+         n.reference_id,
+         n.is_read,
+         n.created_at,
+         -- Sender info: only populated for like/match notifications
+         CASE WHEN n.type IN ('liked','superliked','new_match')
+              THEN u.full_name        ELSE NULL END AS sender_name,
+         CASE WHEN n.type IN ('liked','superliked','new_match')
+              THEN u.profile_photo_url ELSE NULL END AS sender_photo,
+         CASE WHEN n.type IN ('liked','superliked','new_match')
+              THEN u.age              ELSE NULL END AS sender_age
+       FROM notifications n
+       LEFT JOIN users u
+         ON u.user_id = n.reference_id
+        AND n.type IN ('liked','superliked','new_match')
+       WHERE n.user_id = ?
+       ORDER BY n.created_at DESC`,
       [user_id]
     );
     return rows;

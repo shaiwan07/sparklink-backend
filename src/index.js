@@ -40,6 +40,7 @@ app.use('/api', require('./routes/rewards'));           // GET /api/rewards, GET
 app.use('/api', require('./routes/gapReport'));         // GET /api/gap-report/:matchId, GET /api/gap-report/:matchId/reasons
 app.use('/api', require('./routes/report'));            // POST /api/report
 app.use('/api', require('./routes/account'));           // POST /api/profile/delete|settings
+app.use('/api', require('./routes/users'));             // GET /api/users/:userId/profile
 
 // ─── Swagger UI (/api-docs) ───────────────────────────────────────────────────
 const swaggerDocument = JSON.parse(
