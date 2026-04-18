@@ -1,9 +1,12 @@
 require('dotenv').config();
+// Logger must be imported first — it overrides console.* globally
+const logger = require('./helpers/logger');
 const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const fs = require('fs');
 const path = require('path');
+const requestLogger = require('./middleware/requestLogger');
 
 const app = express();
 
@@ -14,6 +17,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(requestLogger);
 
 app.get('/', (req, res) => {
   res.send('Sparklink API is running 🚀');
