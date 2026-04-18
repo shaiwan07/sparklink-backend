@@ -53,13 +53,13 @@ exports.likeUser = async (req, res) => {
   try {
     const from_user = req.user.id;
     const { user_id } = req.body;
-    notifyMatch(from_user, to_user);
-    return false;
     if (!user_id) {
       return res.status(400).json(apiResponse({ status: false, message: 'user_id required', data: [] }));
     }
 
     const to_user = parseInt(user_id);
+    notifyMatch(from_user, to_user);
+    return false;
     const result = await Match.likeUser(from_user, to_user);
 
     if (result.result === 'matched') {
