@@ -64,7 +64,7 @@ exports.getPotentialMatches = async (req, res) => {
     });
 
     // Fetch all swipe/match data in 3 queries — no N+1
-    const { mySwipes, theirSwipes, matchedIds } = await User.getInteractionMaps(userId);
+    const { mySwipes, theirSwipes, matchedIds, matchIdMap } = await User.getInteractionMaps(userId);
 
     const results = [];
 
@@ -99,6 +99,7 @@ exports.getPotentialMatches = async (req, res) => {
         interaction_status: computeInteractionStatus(
           candidate.user_id, mySwipes, theirSwipes, matchedIds
         ),
+        match_id: matchIdMap.get(candidate.user_id) ?? null,
       });
     }
 

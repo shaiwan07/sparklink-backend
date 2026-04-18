@@ -120,7 +120,7 @@ const User = {
       [userId]
     );
     const [matchRows] = await pool.query(
-      `SELECT user1_id, user2_id FROM matches
+      `SELECT match_id, user1_id, user2_id FROM matches
        WHERE (user1_id = ? OR user2_id = ?) AND status = 'matched'`,
       [userId, userId]
     );
@@ -132,11 +132,14 @@ const User = {
     for (const r of theirSwipeRows) theirSwipes[r.from_user] = r.action;
 
     const matchedIds = new Set();
+    const matchIdMap = new Map();
     for (const r of matchRows) {
-      matchedIds.add(r.user1_id === userId ? r.user2_id : r.user1_id);
+      const otherId = r.user1_id === userId ? r.user2_id : r.user1_id;
+      matchedIds.add(otherId);
+      matchIdMap.set(otherId, r.match_id);
     }
 
-    return { mySwipes, theirSwipes, matchedIds };
+    return { mySwipes, theirSwipes, matchedIds, matchIdMap };
   },
 
   async findPotentialMatches({ userId, gender, minAge, maxAge, excludedIds }) {
