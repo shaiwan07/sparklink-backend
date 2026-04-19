@@ -313,50 +313,6 @@
         }
       }
     },
-    "/auth/reset-password": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "Reset password using OTP",
-        "security": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "email",
-                  "otp",
-                  "newPassword"
-                ],
-                "properties": {
-                  "email": {
-                    "type": "string"
-                  },
-                  "otp": {
-                    "type": "string"
-                  },
-                  "newPassword": {
-                    "type": "string",
-                    "minLength": 6
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Password reset successful"
-          },
-          "401": {
-            "description": "Invalid OTP"
-          }
-        }
-      }
-    },
     "/auth/logout": {
       "post": {
         "tags": [
@@ -1711,6 +1667,99 @@
           },
           "404": {
             "description": "User not found or not verified"
+          }
+        }
+      }
+    },
+    "/auth/verify-reset-otp": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Step 2 — Verify password reset OTP",
+        "description": "Validates the OTP sent to the user email. On success, returns a short-lived reset_token (15 min) to be passed to /auth/reset-password.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "otp"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                  },
+                  "otp": {
+                    "type": "string",
+                    "example": "482916"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP verified — reset_token returned"
+          },
+          "401": {
+            "description": "Invalid or expired OTP"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Step 3 — Set new password",
+        "description": "Uses the reset_token from /auth/verify-reset-otp to set a new password.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reset_token",
+                  "newPassword",
+                  "confirmPassword"
+                ],
+                "properties": {
+                  "reset_token": {
+                    "type": "string",
+                    "example": "eyJhbGci..."
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "example": "NewPass@123"
+                  },
+                  "confirmPassword": {
+                    "type": "string",
+                    "example": "NewPass@123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful"
+          },
+          "400": {
+            "description": "Passwords do not match or missing fields"
+          },
+          "401": {
+            "description": "Invalid or expired reset_token"
           }
         }
       }
