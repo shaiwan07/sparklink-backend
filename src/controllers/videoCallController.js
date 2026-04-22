@@ -2,8 +2,10 @@ const VideoCall = require('../models/VideoCall');
 const Match = require('../models/Match');
 const Availability = require('../models/Availability');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 const { buildChannelName, generateRtcToken } = require('../services/agoraService');
 const MSG = require('../constants/error');
+const { sendSMS, SMS } = require('../helpers/smsHelper');
 
 const DAY_MAP = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
@@ -141,6 +143,10 @@ exports.scheduleCall = async (req, res) => {
         Notification.create(match.user1_id, 'video_call', msg, { call_id: String(call_id) }, call_id),
         Notification.create(match.user2_id, 'video_call', msg, { call_id: String(call_id) }, call_id),
       ]).catch(() => {});
+
+      const [u1, u2] = await Promise.all([User.findById(match.user1_id), User.findById(match.user2_id)]);
+      sendSMS(u1?.phone, SMS.callScheduled(u2?.full_name || 'your match', timeStr)).catch(() => {});
+      sendSMS(u2?.phone, SMS.callScheduled(u1?.full_name || 'your match', timeStr)).catch(() => {});
     }
 
     // Generate a caller-specific RTC token (uid = user_id)

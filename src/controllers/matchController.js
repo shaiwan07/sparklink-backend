@@ -2,6 +2,7 @@ const Match = require('../models/Match');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const MSG = require('../constants/error');
+const { sendSMS, SMS } = require('../helpers/smsHelper');
 
 function apiResponse({ status, message, data }) {
   return { status, message, data };
@@ -13,7 +14,10 @@ function apiResponse({ status, message, data }) {
  */
 async function notifyLike(from_user_id, to_user_id, type = 'liked') {
   try {
-    const sender = await User.findById(from_user_id);
+    const [sender, recipient] = await Promise.all([
+      User.findById(from_user_id),
+      User.findById(to_user_id),
+    ]);
     const senderName = sender?.full_name || 'Someone';
 
     const message = type === 'superliked'
@@ -22,6 +26,11 @@ async function notifyLike(from_user_id, to_user_id, type = 'liked') {
 
     // reference_id = from_user_id so the app can open that person's profile
     await Notification.create(to_user_id, type, message, {}, from_user_id);
+
+    const smsBody = type === 'superliked'
+      ? SMS.superliked(senderName)
+      : SMS.liked(senderName);
+    sendSMS(recipient?.phone, smsBody).catch(() => {});
   } catch (_) {
     // Never let notification errors crash the like/superlike response
   }
@@ -58,6 +67,19 @@ exports.likeUser = async (req, res) => {
     }
 
     const to_user = parseInt(user_id);
+
+    // Spark Mode guard — neither party can like/be liked while in an active match
+    const [callerLocked, targetLocked] = await Promise.all([
+      Match.isInSparkMode(from_user),
+      Match.isInSparkMode(to_user),
+    ]);
+    if (callerLocked) {
+      return res.status(403).json(apiResponse({ status: false, message: 'You are in Spark Mode with your current match. Finish that connection first.', data: [] }));
+    }
+    if (targetLocked) {
+      return res.status(403).json(apiResponse({ status: false, message: 'This user is currently in Spark Mode with another match.', data: [] }));
+    }
+
     const result = await Match.likeUser(from_user, to_user);
 
     if (result.result === 'matched') {
@@ -86,6 +108,18 @@ exports.superlikeUser = async (req, res) => {
     }
 
     const to_user = parseInt(user_id);
+
+    const [callerLocked, targetLocked] = await Promise.all([
+      Match.isInSparkMode(from_user),
+      Match.isInSparkMode(to_user),
+    ]);
+    if (callerLocked) {
+      return res.status(403).json(apiResponse({ status: false, message: 'You are in Spark Mode with your current match. Finish that connection first.', data: [] }));
+    }
+    if (targetLocked) {
+      return res.status(403).json(apiResponse({ status: false, message: 'This user is currently in Spark Mode with another match.', data: [] }));
+    }
+
     const result = await Match.superlikeUser(from_user, to_user);
 
     if (result.result === 'matched') {

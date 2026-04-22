@@ -109,6 +109,10 @@
     {
       "name": "Users",
       "description": "Public user profile endpoints"
+    },
+    {
+      "name": "Static",
+      "description": "Static content pages — Privacy Policy, Terms & Conditions, About"
     }
   ],
   "paths": {
@@ -118,7 +122,7 @@
           "Auth"
         ],
         "summary": "Register with email and password",
-        "description": "Creates a new unverified account and sends a 6-digit OTP to the email. The account cannot be used until the OTP is verified via `POST /auth/verify-email`.",
+        "description": "Creates a new unverified account and sends a 6-digit OTP to the email. The account cannot be used until the OTP is verified via `POST /auth/verify-email`. `terms_accepted` must be `true` — corresponds to the checkbox on the signup screen.",
         "security": [],
         "requestBody": {
           "required": true,
@@ -129,7 +133,8 @@
                 "required": [
                   "email",
                   "password",
-                  "confirmPassword"
+                  "confirmPassword",
+                  "terms_accepted"
                 ],
                 "properties": {
                   "email": {
@@ -142,6 +147,11 @@
                   },
                   "confirmPassword": {
                     "type": "string"
+                  },
+                  "terms_accepted": {
+                    "type": "boolean",
+                    "example": true,
+                    "description": "User must accept Terms & Conditions and Privacy Policy before registering"
                   }
                 }
               }
@@ -151,6 +161,9 @@
         "responses": {
           "201": {
             "description": "Registered. OTP sent to email."
+          },
+          "400": {
+            "description": "terms_accepted is false/missing, or passwords do not match"
           },
           "409": {
             "description": "Email already registered"
@@ -1705,6 +1718,73 @@
         }
       }
     },
+    "/auth/apple": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login or register with Apple",
+        "description": "Flutter app sends the Apple identity_token after the user completes Sign in with Apple. Backend verifies the JWT against Apple's JWKS, then creates or logs in the user. Apple only returns the user's name and email on the very first sign-in — on subsequent logins these fields may be absent.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "identity_token"
+                ],
+                "properties": {
+                  "identity_token": {
+                    "type": "string",
+                    "example": "eyJraWQiOiJXNldjT0tCIiwiYWxnIjoiUlMyNTYifQ...",
+                    "description": "Apple identity token from Flutter sign_in_with_apple SDK"
+                  },
+                  "full_name": {
+                    "type": "string",
+                    "example": "Jane Doe",
+                    "description": "Only present on the very first Apple sign-in. Omit on subsequent logins."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful — returns JWT + user object",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Apple login successful",
+                  "data": [
+                    {
+                      "token": "eyJhbGci...",
+                      "user": {
+                        "user_id": 5,
+                        "email": "user@privaterelay.appleid.com",
+                        "full_name": "Jane Doe"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "identity_token missing"
+          },
+          "401": {
+            "description": "Invalid or expired Apple identity token"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
     "/api/users/{userId}/profile": {
       "get": {
         "tags": [
@@ -1871,6 +1951,103 @@
           },
           "401": {
             "description": "Invalid or expired reset_token"
+          }
+        }
+      }
+    },
+    "/api/static/privacy-policy": {
+      "get": {
+        "tags": [
+          "Static"
+        ],
+        "summary": "Privacy Policy",
+        "description": "Returns the full Privacy Policy text. No authentication required. Shown on the signup screen and in Settings → Privacy Policy.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Privacy Policy content",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Privacy Policy",
+                  "data": [
+                    {
+                      "title": "Privacy Policy",
+                      "last_updated": "2026-04-01",
+                      "content": "SparkLink is committed to protecting your personal information..."
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/static/terms": {
+      "get": {
+        "tags": [
+          "Static"
+        ],
+        "summary": "Terms & Conditions",
+        "description": "Returns the full Terms & Conditions text. No authentication required. Shown on the signup screen checkbox and in Settings → Terms & Conditions.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Terms & Conditions content",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Terms & Conditions",
+                  "data": [
+                    {
+                      "title": "Terms & Conditions",
+                      "last_updated": "2026-04-01",
+                      "content": "Welcome to SparkLink. By using our app you agree to these Terms..."
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/static/about": {
+      "get": {
+        "tags": [
+          "Static"
+        ],
+        "summary": "About SparkLink",
+        "description": "Returns app description, version, tagline, contact info, and social links. No authentication required. Shown on the About screen in Settings.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "About content",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "About SparkLink",
+                  "data": [
+                    {
+                      "app_name": "SparkLink",
+                      "version": "1.0.0",
+                      "tagline": "Real connections. Real video dates.",
+                      "description": "SparkLink is a dating app built around meaningful connections...",
+                      "contact_email": "support@sparklink.app",
+                      "website": "https://sparklink.app",
+                      "social": {
+                        "instagram": "@sparklink.app",
+                        "tiktok": "@sparklink"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         }
       }

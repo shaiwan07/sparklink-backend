@@ -26,39 +26,42 @@ const User = {
     return rows[0] || null;
   },
 
-  async create({ email, password_hash }) {
+  async findByAppleId(apple_id) {
+    const [rows] = await pool.query('SELECT * FROM users WHERE apple_id = ?', [apple_id]);
+    return rows[0] || null;
+  },
+
+  async create({ email, password_hash, terms_accepted = 0 }) {
     const [result] = await pool.query(
-      'INSERT INTO users (email, password_hash) VALUES (?, ?)',
-      [email, password_hash]
+      'INSERT INTO users (email, password_hash, terms_accepted) VALUES (?, ?, ?)',
+      [email, password_hash, terms_accepted ? 1 : 0]
     );
     return result.insertId;
   },
 
   // Create a user who signed up via a social provider (no password required)
-  async createSocialUser({ email, full_name, profile_photo_url, facebook_id, google_id }) {
+  async createSocialUser({ email, full_name, profile_photo_url, facebook_id, google_id, apple_id }) {
     const [result] = await pool.query(
       `INSERT INTO users
-         (email, full_name, profile_photo_url, facebook_id, google_id, is_verified, password_hash)
-       VALUES (?, ?, ?, ?, ?, 1, '')`,
+         (email, full_name, profile_photo_url, facebook_id, google_id, apple_id, is_verified, password_hash, terms_accepted)
+       VALUES (?, ?, ?, ?, ?, ?, 1, '', 1)`,
       [
-        email          || null,
-        full_name      || null,
+        email             || null,
+        full_name         || null,
         profile_photo_url || null,
-        facebook_id    || null,
-        google_id      || null,
+        facebook_id       || null,
+        google_id         || null,
+        apple_id          || null,
       ]
     );
     return result.insertId;
   },
 
   // Link a social provider ID to an existing account
-  async linkSocialId(userId, { facebook_id, google_id }) {
-    if (facebook_id) {
-      await pool.query('UPDATE users SET facebook_id = ? WHERE user_id = ?', [facebook_id, userId]);
-    }
-    if (google_id) {
-      await pool.query('UPDATE users SET google_id = ? WHERE user_id = ?', [google_id, userId]);
-    }
+  async linkSocialId(userId, { facebook_id, google_id, apple_id }) {
+    if (facebook_id) await pool.query('UPDATE users SET facebook_id = ? WHERE user_id = ?', [facebook_id, userId]);
+    if (google_id)   await pool.query('UPDATE users SET google_id   = ? WHERE user_id = ?', [google_id,   userId]);
+    if (apple_id)    await pool.query('UPDATE users SET apple_id    = ? WHERE user_id = ?', [apple_id,    userId]);
   },
 
   async existsByEmail(email) {
@@ -77,6 +80,27 @@ const User = {
 
   async updatePassword(userId, password_hash) {
     await pool.query('UPDATE users SET password_hash = ? WHERE user_id = ?', [password_hash, userId]);
+  },
+
+  // Suspend a user for the given number of hours (default 24)
+  async suspend(userId, hours = 24) {
+    const until = new Date(Date.now() + hours * 60 * 60 * 1000);
+    await pool.query(
+      'UPDATE users SET suspended_until = ? WHERE user_id = ?',
+      [until, userId]
+    );
+    return until;
+  },
+
+  // Returns the suspended_until date if currently suspended, otherwise null
+  async getSuspensionStatus(userId) {
+    const [rows] = await pool.query(
+      'SELECT suspended_until FROM users WHERE user_id = ?',
+      [userId]
+    );
+    const until = rows[0]?.suspended_until;
+    if (!until) return null;
+    return new Date(until) > new Date() ? until : null;
   },
 
   // Dynamic update for whitelisted fields only

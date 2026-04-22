@@ -45,6 +45,7 @@ app.use('/api', require('./routes/gapReport'));         // GET /api/gap-report/:
 app.use('/api', require('./routes/report'));            // POST /api/report
 app.use('/api', require('./routes/account'));           // POST /api/profile/delete|settings
 app.use('/api', require('./routes/users'));             // GET /api/users/:userId/profile
+app.use('/api/static', require('./routes/static'));    // GET /api/static/privacy-policy|terms|about
 
 // ─── Swagger UI (/api-docs) ───────────────────────────────────────────────────
 const swaggerDocument = JSON.parse(

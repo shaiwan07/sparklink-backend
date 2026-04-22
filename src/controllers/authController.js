@@ -21,12 +21,15 @@ function generateToken(user) {
 
 // POST /auth/register
 exports.register = async (req, res) => {
-  const { email, password, confirmPassword } = req.body;
+  const { email, password, confirmPassword, terms_accepted } = req.body;
   if (!email || !password || !confirmPassword) {
     return res.status(400).json(apiResponse({ status: false, message: MSG.EMAIL_PASSWORD_REQUIRED, data: [] }));
   }
   if (password !== confirmPassword) {
     return res.status(400).json(apiResponse({ status: false, message: 'Passwords do not match', data: [] }));
+  }
+  if (!terms_accepted) {
+    return res.status(400).json(apiResponse({ status: false, message: 'You must accept the Terms & Conditions and Privacy Policy to register', data: [] }));
   }
   try {
     const exists = await User.existsByEmail(email);
@@ -34,7 +37,7 @@ exports.register = async (req, res) => {
       return res.status(409).json(apiResponse({ status: false, message: MSG.EMAIL_ALREADY_REGISTERED, data: [] }));
     }
     const hash = await bcrypt.hash(password, 10);
-    await User.create({ email, password_hash: hash });
+    await User.create({ email, password_hash: hash, terms_accepted: 1 });
 
     const otp = generateOTP();
     await EmailOTP.createOTP(email, otp, 'signup');

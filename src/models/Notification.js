@@ -9,6 +9,7 @@ const TITLES = {
   reward:               'New Reward Available 🎁',
   message:              'New Message 💬',
   availability_request: 'Video Date Request 📆',
+  suspension:           'Account Suspended ⚠️',
 };
 
 const Notification = {

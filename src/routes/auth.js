@@ -12,5 +12,6 @@ router.post('/resend-otp',   authController.resendOtp);
 // Social auth
 router.post('/facebook', socialAuthController.facebookLogin);
 router.post('/google',   socialAuthController.googleLogin);
+router.post('/apple',    socialAuthController.appleLogin);
 
 module.exports = router;

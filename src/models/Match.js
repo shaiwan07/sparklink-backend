@@ -22,10 +22,10 @@ const Match = {
     );
 
     if (rows.length > 0) {
-      // Mutual like — create match (ignore if already exists)
+      // Mutual like — create match with spark_mode = 1 (ignore if already exists)
       await pool.query(
-        `INSERT IGNORE INTO matches (user1_id, user2_id, status)
-         VALUES (?, ?, 'matched')`,
+        `INSERT IGNORE INTO matches (user1_id, user2_id, status, spark_mode)
+         VALUES (?, ?, 'matched', 1)`,
         [Math.min(from_user, to_user), Math.max(from_user, to_user)]
       );
       return { result: 'matched' };
@@ -64,6 +64,19 @@ const Match = {
       [match_id]
     );
     return rows[0] || null;
+  },
+
+  // Returns true if this user is currently in an active spark_mode match
+  // (used to block them from liking others and prevent others from liking them)
+  async isInSparkMode(user_id) {
+    const [rows] = await pool.query(
+      `SELECT match_id FROM matches
+       WHERE (user1_id = ? OR user2_id = ?)
+         AND status = 'matched' AND spark_mode = 1
+       LIMIT 1`,
+      [user_id, user_id]
+    );
+    return rows.length > 0;
   },
 
   async getMatchBetween(user1_id, user2_id) {
