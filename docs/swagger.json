@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Sparklink Dating API",
-    "description": "Smart Links, Real Connections — Full API for the Sparklink mobile application",
+    "description": "Smart Links, Real Connections — Full API for the Sparklink mobile application.\n\n**Suspension:** Every protected endpoint (Bearer token required) may return a `403` if the account has been suspended. The response includes `suspended_until` so the app can show the exact time the ban lifts.\n\n```json\n{ \"status\": false, \"message\": \"Your account has been suspended until ...\", \"data\": [{ \"suspended_until\": \"2026-04-23T10:00:00.000Z\" }] }\n```",
     "version": "2.0.0"
   },
   "servers": [
@@ -47,6 +47,24 @@
           "end_time": {
             "type": "string",
             "example": "12:00:00"
+          }
+        }
+      }
+    },
+    "responses": {
+      "Suspended": {
+        "description": "Account suspended — returned by the auth middleware on every protected endpoint when the user has been reported and suspended for 24 hours.",
+        "content": {
+          "application/json": {
+            "example": {
+              "status": false,
+              "message": "Your account has been suspended until Wed, 23 Apr 2026 10:00:00 GMT due to a report filed against you.",
+              "data": [
+                {
+                  "suspended_until": "2026-04-23T10:00:00.000Z"
+                }
+              ]
+            }
           }
         }
       }
@@ -338,6 +356,9 @@
         "responses": {
           "200": {
             "description": "Logged out successfully"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -352,6 +373,9 @@
         "responses": {
           "200": {
             "description": "Full profile object"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       },
@@ -442,6 +466,9 @@
         "responses": {
           "200": {
             "description": "Profile updated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -477,6 +504,9 @@
           },
           "400": {
             "description": "No files uploaded"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -500,6 +530,9 @@
         "responses": {
           "200": {
             "description": "Photo deleted"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -578,6 +611,9 @@
           },
           "400": {
             "description": "No answers provided"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -601,6 +637,9 @@
         "responses": {
           "200": {
             "description": "User answers with question text and option text"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -615,6 +654,9 @@
         "responses": {
           "200": {
             "description": "Matches list — each includes match_id, matched_user_id"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -655,6 +697,9 @@
           },
           "400": {
             "description": "Profile, preferences, or location not yet completed"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -687,6 +732,9 @@
         "responses": {
           "200": {
             "description": "result: \"liked\" or \"matched\""
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -719,6 +767,9 @@
         "responses": {
           "200": {
             "description": "result: \"superliked\" or \"matched\""
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -751,6 +802,9 @@
         "responses": {
           "200": {
             "description": "Disliked"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -889,6 +943,9 @@
         "responses": {
           "200": {
             "description": "Array of { id, day_of_week, start_time, end_time }"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       },
@@ -939,13 +996,18 @@
           },
           "400": {
             "description": "Invalid slot format"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
     },
     "/api/availability/request/{matchId}": {
       "post": {
-        "tags": ["Availability"],
+        "tags": [
+          "Availability"
+        ],
         "summary": "Request the other user to set their availability",
         "description": "Sends a push notification to the other match participant asking them to add their available time slots. This is shown when `has_their_availability` is `false` on the potential matches or match profile screen.\n\n**Limits:**\n- Maximum **3 requests** can be sent per match per requester. On the 3rd send the response still succeeds but `requests_remaining` will be `0`.\n- A 4th attempt returns HTTP 429.\n- If the other user has already set their availability, returns HTTP 400 (no notification sent).\n\n**Notification sent to the other user:**\n> \"Sophie wants to schedule a video date with you! Please add your available times so you can connect.\"\n\nThe notification `reference_id` is the requester's `user_id` — tap navigates to their profile.",
         "parameters": [
@@ -953,7 +1015,9 @@
             "name": "matchId",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" },
+            "schema": {
+              "type": "integer"
+            },
             "description": "The match_id of the confirmed match"
           }
         ],
@@ -965,7 +1029,12 @@
                 "example": {
                   "status": true,
                   "message": "Request sent. You have 2 requests remaining.",
-                  "data": [{ "requests_sent": 1, "requests_remaining": 2 }]
+                  "data": [
+                    {
+                      "requests_sent": 1,
+                      "requests_remaining": 2
+                    }
+                  ]
                 }
               }
             }
@@ -983,7 +1052,12 @@
                 "example": {
                   "status": false,
                   "message": "You can only send 3 availability requests per match. Limit reached.",
-                  "data": [{ "requests_sent": 3, "requests_remaining": 0 }]
+                  "data": [
+                    {
+                      "requests_sent": 3,
+                      "requests_remaining": 0
+                    }
+                  ]
                 }
               }
             }
@@ -1014,7 +1088,15 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+              "enum": [
+                "Mon",
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat",
+                "Sun"
+              ]
             },
             "description": "Optional filter — omit to return all overlapping days"
           }
@@ -1085,7 +1167,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["match_id", "availability_id"],
+                "required": [
+                  "match_id",
+                  "availability_id"
+                ],
                 "properties": {
                   "match_id": {
                     "type": "integer",
@@ -1147,6 +1232,9 @@
         "responses": {
           "200": {
             "description": "Array of call records including match participants, channel name, status, and scheduled/expiry times"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -1164,7 +1252,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["call_id", "status"],
+                "required": [
+                  "call_id",
+                  "status"
+                ],
                 "properties": {
                   "call_id": {
                     "type": "integer",
@@ -1172,7 +1263,13 @@
                   },
                   "status": {
                     "type": "string",
-                    "enum": ["scheduled", "active", "completed", "cancelled", "failed"],
+                    "enum": [
+                      "scheduled",
+                      "active",
+                      "completed",
+                      "cancelled",
+                      "failed"
+                    ],
                     "description": "New status for the call"
                   }
                 }
@@ -1186,6 +1283,9 @@
           },
           "400": {
             "description": "Missing fields or invalid status value"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -1211,6 +1311,9 @@
         "responses": {
           "200": {
             "description": "Call record with status, scheduled_time, expires_at, and channel_name"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           },
           "404": {
             "description": "No call found for this match"
@@ -1314,6 +1417,9 @@
         "responses": {
           "200": {
             "description": "Array of reason strings (high-scoring categories + gap notes)"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -1359,6 +1465,9 @@
                 }
               }
             }
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -1372,6 +1481,9 @@
         "responses": {
           "200": {
             "description": "All notifications marked read"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -1403,6 +1515,9 @@
         "responses": {
           "200": {
             "description": "Notification marked as read"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -1430,6 +1545,9 @@
         "responses": {
           "200": {
             "description": "Redeemed offers with full reward details"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -1461,6 +1579,9 @@
         "responses": {
           "200": {
             "description": "Redeemed — returns reward details including qr_code_url"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           },
           "404": {
             "description": "Reward not found or expired"
@@ -1507,6 +1628,9 @@
           },
           "400": {
             "description": "reported_id and reason required"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -1520,6 +1644,9 @@
         "responses": {
           "200": {
             "description": "Account deleted"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -1548,6 +1675,9 @@
         "responses": {
           "200": {
             "description": "Settings updated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -1592,6 +1722,9 @@
           },
           "401": {
             "description": "Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
@@ -1650,6 +1783,9 @@
           },
           "401": {
             "description": "Invalid or expired Facebook token"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           },
           "500": {
             "description": "Server error"
@@ -1711,6 +1847,9 @@
           },
           "401": {
             "description": "Invalid or expired Google ID token"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           },
           "500": {
             "description": "Server error"
@@ -1856,6 +1995,9 @@
           "401": {
             "description": "Unauthorized"
           },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
+          },
           "404": {
             "description": "User not found or not verified"
           }
@@ -1899,6 +2041,9 @@
           },
           "401": {
             "description": "Invalid or expired OTP"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           },
           "404": {
             "description": "User not found"
@@ -1951,6 +2096,9 @@
           },
           "401": {
             "description": "Invalid or expired reset_token"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
           }
         }
       }
