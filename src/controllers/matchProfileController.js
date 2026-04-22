@@ -4,6 +4,7 @@ const UserPhoto = require('../models/UserPhoto');
 const Interest = require('../models/Interest');
 const Location = require('../models/Location');
 const Preference = require('../models/Preference');
+const Availability = require('../models/Availability');
 const { Questionnaire } = require('../models/Questionnaire');
 const { calculateMatchPercentage } = require('../helpers/matchHelper');
 const { GapReport, MatchReasons } = require('../models/GapReport');
@@ -32,13 +33,15 @@ exports.getMatchProfile = async (req, res) => {
       return res.status(404).json(apiResponse({ status: false, message: 'Matched user not found', data: [] }));
     }
 
-    const [photos, interests, location, gapReport, matchReasons, match_percentage] = await Promise.all([
+    const [photos, interests, location, gapReport, matchReasons, match_percentage, myAvailSet, theirAvailSet] = await Promise.all([
       UserPhoto.getAll(other_id),
       Interest.getUserInterests(other_id),
       Location.get(other_id),
       GapReport.get(matchId),
       MatchReasons.get(matchId),
-      calculateMatchPercentage(my_id, other_id, Interest, Preference, Questionnaire)
+      calculateMatchPercentage(my_id, other_id, Interest, Preference, Questionnaire),
+      Availability.getUsersWithAvailability([my_id]),
+      Availability.getUsersWithAvailability([other_id]),
     ]);
 
     const { password_hash, phone, instagram_username, ...safeUser } = matchedUser;
@@ -47,14 +50,17 @@ exports.getMatchProfile = async (req, res) => {
       status: true,
       message: 'Match profile fetched',
       data: [{
-        match_id: match.match_id,
-        user: safeUser,
+        match_id:              match.match_id,
+        interaction_status:    'matched',
+        has_my_availability:   myAvailSet.has(my_id),
+        has_their_availability: theirAvailSet.has(other_id),
+        user:                  safeUser,
         photos,
         interests,
         location,
         match_percentage,
-        gap_report: gapReport,
-        match_reasons: matchReasons
+        gap_report:            gapReport,
+        match_reasons:         matchReasons
       }]
     }));
   } catch (err) {
