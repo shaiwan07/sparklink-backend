@@ -930,6 +930,54 @@
         }
       }
     },
+    "/api/availability/request/{matchId}": {
+      "post": {
+        "tags": ["Availability"],
+        "summary": "Request the other user to set their availability",
+        "description": "Sends a push notification to the other match participant asking them to add their available time slots. This is shown when `has_their_availability` is `false` on the potential matches or match profile screen.\n\n**Limits:**\n- Maximum **3 requests** can be sent per match per requester. On the 3rd send the response still succeeds but `requests_remaining` will be `0`.\n- A 4th attempt returns HTTP 429.\n- If the other user has already set their availability, returns HTTP 400 (no notification sent).\n\n**Notification sent to the other user:**\n> \"Sophie wants to schedule a video date with you! Please add your available times so you can connect.\"\n\nThe notification `reference_id` is the requester's `user_id` — tap navigates to their profile.",
+        "parameters": [
+          {
+            "name": "matchId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "The match_id of the confirmed match"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request sent successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Request sent. You have 2 requests remaining.",
+                  "data": [{ "requests_sent": 1, "requests_remaining": 2 }]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Other user already has availability set — no notification needed"
+          },
+          "403": {
+            "description": "Caller is not a participant of this match"
+          },
+          "429": {
+            "description": "3-request limit already reached for this match",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": false,
+                  "message": "You can only send 3 availability requests per match. Limit reached.",
+                  "data": [{ "requests_sent": 3, "requests_remaining": 0 }]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/availability/overlap/{matchId}": {
       "get": {
         "tags": [

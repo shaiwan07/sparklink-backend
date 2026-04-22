@@ -2,12 +2,13 @@ const pool = require('../config/db');
 const { sendPushNotification } = require('../helpers/firebaseHelper');
 
 const TITLES = {
-  liked:      'Someone liked you! 👀',
-  superliked: 'You got a Superlike! ⭐',
-  new_match:  "It's a Match! 🎉",
-  video_call: 'Video Call Scheduled 📅',
-  reward:     'New Reward Available 🎁',
-  message:    'New Message 💬',
+  liked:                'Someone liked you! 👀',
+  superliked:           'You got a Superlike! ⭐',
+  new_match:            "It's a Match! 🎉",
+  video_call:           'Video Call Scheduled 📅',
+  reward:               'New Reward Available 🎁',
+  message:              'New Message 💬',
+  availability_request: 'Video Date Request 📆',
 };
 
 const Notification = {

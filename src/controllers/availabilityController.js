@@ -1,5 +1,8 @@
 const Availability = require('../models/Availability');
+const AvailabilityRequest = require('../models/AvailabilityRequest');
 const Match = require('../models/Match');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
 const MSG = require('../constants/error');
 
 function apiResponse({ status, message, data }) {
@@ -58,6 +61,66 @@ exports.getUserAvailability = async (req, res) => {
 
     const slots = await Availability.getByUser(other_id);
     res.status(200).json(apiResponse({ status: true, message: 'Availability fetched', data: slots }));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
+  }
+};
+
+// POST /api/availability/request/:matchId  — ask the other user to set their availability
+// Max 3 requests per (match, requester) pair.
+exports.requestAvailability = async (req, res) => {
+  try {
+    const from_user_id = req.user.id;
+    const matchId      = parseInt(req.params.matchId);
+
+    // Verify this is a confirmed match the caller is part of
+    const match = await Match.getMatchById(matchId);
+    if (!match || (match.user1_id !== from_user_id && match.user2_id !== from_user_id)) {
+      return res.status(403).json(apiResponse({ status: false, message: 'Not authorized for this match', data: [] }));
+    }
+
+    const to_user_id = match.user1_id === from_user_id ? match.user2_id : match.user1_id;
+
+    // If the other user already has availability set, no request needed
+    const theirSlots = await Availability.getByUser(to_user_id);
+    if (theirSlots.length > 0) {
+      return res.status(400).json(apiResponse({
+        status:  false,
+        message: 'This user has already set their availability. You can now schedule a call.',
+        data:    []
+      }));
+    }
+
+    // Enforce the 3-request limit — check BEFORE incrementing
+    const currentCount = await AvailabilityRequest.getCount(matchId, from_user_id);
+    if (currentCount >= AvailabilityRequest.MAX_REQUESTS) {
+      return res.status(429).json(apiResponse({
+        status:  false,
+        message: `You can only send ${AvailabilityRequest.MAX_REQUESTS} availability requests per match. Limit reached.`,
+        data:    [{ requests_sent: currentCount, requests_remaining: 0 }]
+      }));
+    }
+
+    // Increment counter and send notification
+    const newCount = await AvailabilityRequest.increment(matchId, from_user_id, to_user_id);
+    const remaining = AvailabilityRequest.MAX_REQUESTS - newCount;
+
+    // Fetch requester name for the notification message
+    const requester = await User.findById(from_user_id);
+    const requesterName = requester?.full_name || 'Your match';
+    const msg = `${requesterName} wants to schedule a video date with you! Please add your available times so you can connect.`;
+
+    // reference_id = from_user_id so the recipient can navigate to the requester's profile
+    Notification.create(to_user_id, 'availability_request', msg, {}, from_user_id).catch(() => {});
+
+    return res.status(200).json(apiResponse({
+      status:  true,
+      message: remaining > 0
+        ? `Request sent. You have ${remaining} request${remaining === 1 ? '' : 's'} remaining.`
+        : 'Request sent. This was your last request for this match.',
+      data: [{ requests_sent: newCount, requests_remaining: remaining }]
+    }));
   } catch (err) {
     console.error(err);
     res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
