@@ -118,6 +118,7 @@
           "Auth"
         ],
         "summary": "Register with email and password",
+        "description": "Creates a new unverified account and sends a 6-digit OTP to the email. The account cannot be used until the OTP is verified via `POST /auth/verify-email`.",
         "security": [],
         "requestBody": {
           "required": true,
@@ -240,6 +241,7 @@
           "Auth"
         ],
         "summary": "Login with email and password",
+        "description": "Returns a 7-day JWT on success. Include it as `Authorization: Bearer <token>` on all protected endpoints. Returns 403 if the email has not been verified yet.",
         "security": [],
         "requestBody": {
           "required": true,
@@ -319,6 +321,7 @@
           "Auth"
         ],
         "summary": "Logout — screen 48 (client discards JWT)",
+        "description": "Stateless logout — the server returns success and the client must discard the JWT. JWTs are not blocklisted server-side; the token simply expires after 7 days.",
         "responses": {
           "200": {
             "description": "Logged out successfully"
@@ -332,6 +335,7 @@
           "Profile"
         ],
         "summary": "Get current user full profile (photos, interests, location, preferences)",
+        "description": "Returns the complete profile of the logged-in user including uploaded photos, selected interests, location, and preferences. Used on the Edit Profile screen and to resume onboarding from the correct step via `current_step`.",
         "responses": {
           "200": {
             "description": "Full profile object"
@@ -594,6 +598,7 @@
           "Matches"
         ],
         "summary": "Get all confirmed matches for current user",
+        "description": "Returns all mutual matches (status = matched) for the logged-in user. Each record includes `match_id` which is required for `GET /api/matches/{matchId}/profile` and `POST /api/video-calls`.",
         "responses": {
           "200": {
             "description": "Matches list — each includes match_id, matched_user_id"
@@ -606,13 +611,37 @@
         "tags": [
           "Matches"
         ],
-        "summary": "Get potential matches filtered by preferences + distance + compatibility % — screen 44",
+        "summary": "Get potential matches — screen 44",
+        "description": "Returns all verified users matching the caller's gender/age/distance preferences, excluding only blocked users. Each candidate carries an `interaction_status` flag so Flutter can render the correct heart state without a second API call.\n\n**interaction_status values:**\n- `null` — no interaction yet\n- `i_liked` — caller already liked them\n- `i_superliked` — caller already superliked them\n- `i_disliked` — caller already disliked them\n- `they_liked` — they liked the caller (show indicator)\n- `matched` — mutual match confirmed\n\n**match_id** is non-null only when `interaction_status === 'matched'` — pass it to `GET /api/matches/{matchId}/profile`.\n\n**has_my_availability** / **has_their_availability** — booleans indicating whether each side has set recurring time slots. Both must be true before a video call can be scheduled.",
         "responses": {
           "200": {
-            "description": "Candidates sorted by match_percentage desc — each has distance_km, match_percentage, photos[]"
+            "description": "Candidates sorted: they_liked → null → liked/superliked → matched → disliked, then by match_percentage desc",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Potential matches found",
+                  "data": [
+                    {
+                      "user_id": 7,
+                      "full_name": "Sophie",
+                      "age": 26,
+                      "distance_km": 3.2,
+                      "match_percentage": 87,
+                      "photos": [],
+                      "city": "Tel Aviv",
+                      "interaction_status": "they_liked",
+                      "match_id": null,
+                      "has_my_availability": true,
+                      "has_their_availability": false
+                    }
+                  ]
+                }
+              }
+            }
           },
           "400": {
-            "description": "Profile/preferences/location incomplete"
+            "description": "Profile, preferences, or location not yet completed"
           }
         }
       }
@@ -622,7 +651,8 @@
         "tags": [
           "Matches"
         ],
-        "summary": "Like a user — swipe right (writes to swipes table, auto-creates match if mutual)",
+        "summary": "Like a user — swipe right",
+        "description": "Records a like in the swipes table. If the target user has already liked the caller, a mutual match is created automatically (status = matched) and both users receive a push notification. The response contains `result: 'liked'` or `result: 'matched'`.",
         "requestBody": {
           "required": true,
           "content": {
@@ -653,7 +683,8 @@
         "tags": [
           "Matches"
         ],
-        "summary": "Superlike a user (writes to swipes table, auto-creates match if mutual)",
+        "summary": "Superlike a user",
+        "description": "Same as like but records action as `superlike`. The target user's notification will show a superlike indicator. Auto-creates a match if mutual.",
         "requestBody": {
           "required": true,
           "content": {
@@ -685,6 +716,7 @@
           "Matches"
         ],
         "summary": "Dislike a user — swipe left",
+        "description": "Records a dislike in the swipes table. The disliked user remains visible in potential matches with `interaction_status: 'i_disliked'` so the caller can change their mind later.",
         "requestBody": {
           "required": true,
           "content": {
@@ -716,6 +748,7 @@
           "Matches"
         ],
         "summary": "Unmatch — sets status to unmatched",
+        "description": "Ends a confirmed match. The match record status becomes `unmatched` and neither user will appear in each other's matched list. The caller must be a participant of the match.",
         "requestBody": {
           "required": true,
           "content": {
@@ -750,6 +783,7 @@
           "Matches"
         ],
         "summary": "Block a matched user",
+        "description": "Sets match status to `blocked`. The blocked user is excluded from all future potential match results for the caller and vice versa.",
         "requestBody": {
           "required": true,
           "content": {
@@ -784,6 +818,7 @@
           "Matches"
         ],
         "summary": "Full profile of matched user with compatibility analysis — screens 50-51",
+        "description": "Returns the full profile of the other participant in a confirmed match, including photos, interests, match percentage, gap report, and match reasons. Only accessible to the two participants of the match.",
         "parameters": [
           {
             "name": "matchId",
@@ -810,6 +845,7 @@
           "Matches"
         ],
         "summary": "Get phone and Instagram of matched user — screen 55 (It is a Match!)",
+        "description": "Returns the private contact details (phone number and Instagram username) of the matched user. Only revealed after a confirmed mutual match. Only accessible to the two match participants.",
         "parameters": [
           {
             "name": "matchId",
@@ -836,6 +872,7 @@
           "Availability"
         ],
         "summary": "Get my availability slots — screen 52",
+        "description": "Returns all recurring weekly time slots the caller has set. Each slot has an `id` that can be passed to `POST /api/video-calls` as `availability_id` when scheduling a call.",
         "responses": {
           "200": {
             "description": "Array of { id, day_of_week, start_time, end_time }"
@@ -847,6 +884,7 @@
           "Availability"
         ],
         "summary": "Set my availability — screen 52 (replaces all existing slots)",
+        "description": "Replaces the caller's entire availability schedule with the provided slots. Send an empty array to clear all slots.",
         "requestBody": {
           "required": true,
           "content": {
@@ -897,7 +935,8 @@
         "tags": [
           "Availability"
         ],
-        "summary": "Get overlapping time slots with a match — screens 52-53. Add ?day=Mon to filter by day.",
+        "summary": "Get overlapping time slots with a match — screens 52-53",
+        "description": "Computes recurring weekly time windows where both matched users are available. Each result includes `availability_id` (the caller's slot ID) — pass this directly to `POST /api/video-calls` to schedule the call. An empty array means the users have no overlapping slots (show screen 53 no-overlap state). Add `?day=Mon` to filter by a specific weekday.",
         "parameters": [
           {
             "name": "matchId",
@@ -905,7 +944,8 @@
             "required": true,
             "schema": {
               "type": "integer"
-            }
+            },
+            "description": "The match_id from the matches table"
           },
           {
             "name": "day",
@@ -913,24 +953,33 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "Mon",
-                "Tue",
-                "Wed",
-                "Thu",
-                "Fri",
-                "Sat",
-                "Sun"
-              ]
-            }
+              "enum": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+            },
+            "description": "Optional filter — omit to return all overlapping days"
           }
         ],
         "responses": {
           "200": {
-            "description": "Array of { overlap_start, overlap_end }. Empty = screen 53 no-overlap state."
+            "description": "Array of overlapping slots",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Overlapping slots found",
+                  "data": [
+                    {
+                      "availability_id": 3,
+                      "day_of_week": "Mon",
+                      "overlap_start": "10:00:00",
+                      "overlap_end": "12:00:00"
+                    }
+                  ]
+                }
+              }
+            }
           },
           "403": {
-            "description": "Not authorized"
+            "description": "Not authorized — you must be a participant of this match"
           }
         }
       }
@@ -940,7 +989,8 @@
         "tags": [
           "Availability"
         ],
-        "summary": "Get a matched user availability — screen 52 match side",
+        "summary": "Get a matched user's availability — screen 52 match side",
+        "description": "Returns the recurring weekly availability slots of another user. Requires an active confirmed match between the caller and the target user — returns 403 otherwise.",
         "parameters": [
           {
             "name": "userId",
@@ -967,25 +1017,24 @@
           "Video Calls"
         ],
         "summary": "Schedule a video call — screen 52 (Schedule Call button)",
+        "description": "Schedules a video call between two matched users. The caller picks an overlapping availability slot from `GET /api/availability/overlap/{matchId}` and passes its `availability_id` here. The backend verifies that both participants have matching availability on that day, then computes the next real-world occurrence of that recurring time slot as `scheduled_time`.\n\n**Flow:**\n1. Call `GET /api/availability/overlap/{matchId}` — get overlapping slots\n2. User taps a slot → its `availability_id` is sent here\n3. Backend validates overlap, creates the Agora channel, and returns RTC credentials\n4. Both users call this endpoint with the **same** `match_id` — the second caller re-uses the existing channel and receives their own RTC token\n5. A push notification is sent to both users with the scheduled time\n\n**Error cases:**\n- `400` if either `match_id` or `availability_id` is missing\n- `400` if no overlap exists on that day\n- `404` if the availability slot does not exist\n- `409` if the caller is already in an active call\n- `410` if the previous call for this match has expired/cancelled/completed",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "match_id"
-                ],
+                "required": ["match_id", "availability_id"],
                 "properties": {
                   "match_id": {
                     "type": "integer",
-                    "example": 100
+                    "example": 100,
+                    "description": "The match_id of the confirmed match between the two users"
                   },
-                  "scheduled_time": {
-                    "type": "string",
-                    "format": "date-time",
-                    "example": "2026-04-20T10:00:00",
-                    "description": "Optional — omit for an immediate call"
+                  "availability_id": {
+                    "type": "integer",
+                    "example": 3,
+                    "description": "The `availability_id` from `GET /api/availability/overlap/{matchId}` — identifies the overlapping recurring time slot"
                   }
                 }
               }
@@ -994,7 +1043,7 @@
         },
         "responses": {
           "200": {
-            "description": "Call created — returns Agora channel info for both users to join",
+            "description": "Call scheduled — both users must use the returned `channelName` and their own `rtcToken` to join the Agora room",
             "content": {
               "application/json": {
                 "example": {
@@ -1006,12 +1055,25 @@
                       "channelName": "call_100_1713456789123",
                       "rtcToken": "006a6bda22cec214e9f...signed_token...",
                       "uid": 10,
-                      "appId": "a6bda22cec214e9f92bd1621a8a9058c"
+                      "appId": "a6bda22cec214e9f92bd1621a8a9058c",
+                      "scheduled_time": "2026-04-28T10:00:00.000Z"
                     }
                   ]
                 }
               }
             }
+          },
+          "400": {
+            "description": "Missing fields, slot not found, or no availability overlap on that day"
+          },
+          "403": {
+            "description": "Caller is not a participant of this match"
+          },
+          "409": {
+            "description": "Caller is already in an active call"
+          },
+          "410": {
+            "description": "Previous call for this match has expired, been cancelled, or completed — schedule a new one"
           }
         }
       },
@@ -1020,9 +1082,10 @@
           "Video Calls"
         ],
         "summary": "Get all my video calls — screen 45 Alerts tab",
+        "description": "Returns all video calls (past and upcoming) that the caller is a participant in, ordered by scheduled_time descending.",
         "responses": {
           "200": {
-            "description": "Video calls with match info"
+            "description": "Array of call records including match participants, channel name, status, and scheduled/expiry times"
           }
         }
       }
@@ -1032,29 +1095,24 @@
         "tags": [
           "Video Calls"
         ],
-        "summary": "Update call status (scheduled / completed / cancelled / failed)",
+        "summary": "Update call status — called by Flutter when call ends",
+        "description": "Flutter calls this endpoint when a call ends (user hangs up, network error, etc.). Valid transitions: `scheduled → active`, `active → completed`, `active → failed`, `scheduled → cancelled`.\n\nThe cron job auto-sets `expired` for calls whose 20-minute join window has passed — Flutter does not need to set this status.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "call_id",
-                  "status"
-                ],
+                "required": ["call_id", "status"],
                 "properties": {
                   "call_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 5
                   },
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "scheduled",
-                      "completed",
-                      "cancelled",
-                      "failed"
-                    ]
+                    "enum": ["scheduled", "active", "completed", "cancelled", "failed"],
+                    "description": "New status for the call"
                   }
                 }
               }
@@ -1064,6 +1122,9 @@
         "responses": {
           "200": {
             "description": "Status updated"
+          },
+          "400": {
+            "description": "Missing fields or invalid status value"
           }
         }
       }
@@ -1073,7 +1134,8 @@
         "tags": [
           "Video Calls"
         ],
-        "summary": "Get scheduled call for a specific match",
+        "summary": "Get the most recent call for a specific match",
+        "description": "Returns the latest call record for a given match. Use this to check if a scheduled call already exists before allowing the user to schedule another one.",
         "parameters": [
           {
             "name": "match_id",
@@ -1081,15 +1143,16 @@
             "required": true,
             "schema": {
               "type": "integer"
-            }
+            },
+            "description": "The match_id to look up"
           }
         ],
         "responses": {
           "200": {
-            "description": "Call details"
+            "description": "Call record with status, scheduled_time, expires_at, and channel_name"
           },
           "404": {
-            "description": "No call found"
+            "description": "No call found for this match"
           }
         }
       }

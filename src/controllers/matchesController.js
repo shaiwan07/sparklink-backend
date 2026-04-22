@@ -3,6 +3,7 @@ const Preference = require('../models/Preference');
 const Location = require('../models/Location');
 const UserPhoto = require('../models/UserPhoto');
 const UserInterest = require('../models/Interest');
+const Availability = require('../models/Availability');
 const { Questionnaire } = require('../models/Questionnaire');
 const { getDistanceFromLatLonInKm } = require('../helpers/locationHelper');
 const { calculateMatchPercentage } = require('../helpers/matchHelper');
@@ -66,6 +67,14 @@ exports.getPotentialMatches = async (req, res) => {
     // Fetch all swipe/match data in 3 queries — no N+1
     const { mySwipes, theirSwipes, matchedIds, matchIdMap } = await User.getInteractionMaps(userId);
 
+    // Batch availability check — 2 queries total regardless of candidate count
+    const candidateIds = candidates.map(c => c.user_id);
+    const [availableUserIds, myAvailabilitySet] = await Promise.all([
+      Availability.getUsersWithAvailability(candidateIds),
+      Availability.getUsersWithAvailability([userId]),
+    ]);
+    const has_my_availability = myAvailabilitySet.has(userId);
+
     const results = [];
 
     for (const candidate of candidates) {
@@ -96,10 +105,12 @@ exports.getPotentialMatches = async (req, res) => {
         match_percentage,
         photos,
         city:               candidateLocation.city || null,
-        interaction_status: computeInteractionStatus(
+        interaction_status:      computeInteractionStatus(
           candidate.user_id, mySwipes, theirSwipes, matchedIds
         ),
-        match_id: matchIdMap.get(candidate.user_id) ?? null,
+        match_id:                matchIdMap.get(candidate.user_id) ?? null,
+        has_my_availability,
+        has_their_availability:  availableUserIds.has(candidate.user_id),
       });
     }
 

@@ -53,7 +53,10 @@ const swaggerDocument = JSON.parse(
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // ─── Start ────────────────────────────────────────────────────────────────────
+const { startCallNotificationCron } = require('./jobs/callNotificationCron');
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  startCallNotificationCron();
 });
