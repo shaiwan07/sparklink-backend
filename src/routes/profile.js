@@ -9,6 +9,7 @@ router.get('/profile', auth, profileController.getProfile);
 router.put('/profile', auth, profileController.updateProfile);
 router.put('/profile/fcm-token', auth, profileController.updateFcmToken);
 router.post('/profile/photo', auth, upload.array('files', 5), profileController.uploadProfilePhoto);
+router.put('/profile/photo/primary', auth, profileController.setProfilePhoto);
 router.delete('/profile/photo/:photoId', auth, profileController.deleteProfilePhoto);
 
 module.exports = router;

@@ -180,15 +180,32 @@ exports.scheduleCall = async (req, res) => {
   }
 };
 
+// Shapes a raw DB call row into the same response format as scheduleCall
+function shapeCall(call, uid) {
+  const channelName = call.channel_name || null;
+  return {
+    call_id:        call.call_id,
+    match_id:       call.match_id,
+    status:         call.status,
+    channelName,
+    rtcToken:       channelName ? generateRtcToken(channelName, uid) : null,
+    uid,
+    appId:          process.env.AGORA_APP_ID,
+    scheduled_time: call.scheduled_time,
+    expires_at:     call.expires_at,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────
 // GET /api/video-calls
 // Returns all calls the logged-in user is part of
 // ─────────────────────────────────────────────────────────────
 exports.getUserCalls = async (req, res) => {
   try {
-    const user_id = req.user.id;
-    const calls = await VideoCall.getUserCalls(user_id);
-    res.status(200).json(apiResponse({ status: true, message: 'Video calls fetched', data: calls }));
+    const uid = req.user.id;
+    const calls = await VideoCall.getUserCalls(uid);
+    const data = calls.map(c => shapeCall(c, uid));
+    res.status(200).json(apiResponse({ status: true, message: 'Video calls fetched', data }));
   } catch (err) {
     res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
   }
@@ -199,12 +216,13 @@ exports.getUserCalls = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 exports.getCallByMatchId = async (req, res) => {
   try {
+    const uid = req.user.id;
     const { match_id } = req.params;
     const call = await VideoCall.getByMatchId(match_id);
     if (!call) {
       return res.status(404).json(apiResponse({ status: false, message: 'No call found for this match', data: [] }));
     }
-    res.status(200).json(apiResponse({ status: true, message: 'Call fetched', data: call }));
+    res.status(200).json(apiResponse({ status: true, message: 'Call fetched', data: [shapeCall(call, uid)] }));
   } catch (err) {
     res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
   }

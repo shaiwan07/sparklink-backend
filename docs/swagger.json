@@ -511,6 +511,56 @@
         }
       }
     },
+    "/api/profile/photo/primary": {
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Set profile photo from gallery — screen 49",
+        "description": "Promotes an existing gallery photo (from `user_photos`) to become the user's main profile picture (`users.profile_photo_url`). The `photo_id` must belong to the caller. Use `GET /api/profile` to retrieve the current list of gallery photos and their IDs.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["photo_id"],
+                "properties": {
+                  "photo_id": {
+                    "type": "integer",
+                    "example": 12,
+                    "description": "photo_id from the user_photos gallery"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile photo updated",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Profile photo updated",
+                  "data": [{ "profile_photo_url": "https://fra1.digitaloceanspaces.com/sparklink-assets/profile_photos/abc123.jpg" }]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "photo_id missing"
+          },
+          "403": {
+            "$ref": "#/components/responses/Suspended"
+          },
+          "404": {
+            "description": "Photo not found or does not belong to you"
+          }
+        }
+      }
+    },
     "/api/profile/photo/{photoId}": {
       "delete": {
         "tags": [
@@ -885,7 +935,7 @@
           "Matches"
         ],
         "summary": "Full profile of matched user with compatibility analysis — screens 50-51",
-        "description": "Returns the full profile of the other participant in a confirmed match, including photos, interests, match percentage, gap report, and match reasons. Only accessible to the two participants of the match.",
+        "description": "Returns the full profile of the other participant in a confirmed match.\n\nIncludes the same status flags as the potential-matches list so Flutter can drive the availability/scheduling UI without a separate call:\n- **`interaction_status`** — always `'matched'` on this endpoint\n- **`has_my_availability`** — `true` if the caller has set recurring time slots\n- **`has_their_availability`** — `true` if the matched user has set recurring time slots\n\nBoth availability flags must be `true` before a video call can be scheduled. If either is `false`, show the 'Set Availability' or 'Request Availability' button accordingly.",
         "parameters": [
           {
             "name": "matchId",
@@ -898,10 +948,56 @@
         ],
         "responses": {
           "200": {
-            "description": "user + photos + interests + match_percentage + gap_report + match_reasons"
+            "description": "Match profile returned",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Match profile fetched",
+                  "data": [
+                    {
+                      "match_id": 4,
+                      "interaction_status": "matched",
+                      "has_my_availability": true,
+                      "has_their_availability": false,
+                      "user": {
+                        "user_id": 16,
+                        "full_name": "Priya Verma",
+                        "age": 25,
+                        "gender": "female",
+                        "bio": "Love hiking and coffee."
+                      },
+                      "photos": [{ "photo_id": 1, "url": "https://..." }],
+                      "interests": ["Yoga", "Traveling"],
+                      "location": { "city": "Mumbai", "country": "India" },
+                      "match_percentage": 82,
+                      "gap_report": [],
+                      "match_reasons": []
+                    }
+                  ]
+                }
+              }
+            }
           },
           "403": {
-            "description": "Not your match"
+            "description": "Not a participant of this match, or account suspended",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not_authorized": {
+                    "summary": "Not your match",
+                    "value": { "status": false, "message": "Not authorized", "data": [] }
+                  },
+                  "suspended": {
+                    "summary": "Account suspended",
+                    "value": { "status": false, "message": "Your account has been suspended until Wed, 23 Apr 2026 10:00:00 GMT due to a report filed against you.", "data": [{ "suspended_until": "2026-04-23T10:00:00.000Z" }] }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Match not found"
           }
         }
       }
@@ -1228,10 +1324,31 @@
           "Video Calls"
         ],
         "summary": "Get all my video calls — screen 45 Alerts tab",
-        "description": "Returns all video calls (past and upcoming) that the caller is a participant in, ordered by scheduled_time descending.",
+        "description": "Returns all video calls (past and upcoming) that the caller is a participant in, ordered by scheduled_time descending. Each record includes a fresh `rtcToken` and `channelName` — the same shape as the schedule call response — so Flutter can join directly without a second API call.",
         "responses": {
           "200": {
-            "description": "Array of call records including match participants, channel name, status, and scheduled/expiry times"
+            "description": "Array of call records with full Agora credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Video calls fetched",
+                  "data": [
+                    {
+                      "call_id": 5,
+                      "match_id": 6,
+                      "status": "scheduled",
+                      "channelName": "call_6_1776883911237",
+                      "rtcToken": "006a6bda22cec214e9f92bd1621a8a9058cIAB...",
+                      "uid": 20,
+                      "appId": "a6bda22cec214e9f92bd1621a8a9058c",
+                      "scheduled_time": "2026-04-27T09:00:00.000Z",
+                      "expires_at": "2026-04-27T09:20:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
           },
           "403": {
             "$ref": "#/components/responses/Suspended"
@@ -1296,7 +1413,7 @@
           "Video Calls"
         ],
         "summary": "Get the most recent call for a specific match",
-        "description": "Returns the latest call record for a given match. Use this to check if a scheduled call already exists before allowing the user to schedule another one.",
+        "description": "Returns the latest call record for a given match with full Agora credentials. Use this to check if a scheduled call already exists before allowing the user to schedule another one, or to re-join an active call after an interruption.",
         "parameters": [
           {
             "name": "match_id",
@@ -1310,7 +1427,28 @@
         ],
         "responses": {
           "200": {
-            "description": "Call record with status, scheduled_time, expires_at, and channel_name"
+            "description": "Call record with full Agora credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Call fetched",
+                  "data": [
+                    {
+                      "call_id": 5,
+                      "match_id": 6,
+                      "status": "scheduled",
+                      "channelName": "call_6_1776883911237",
+                      "rtcToken": "006a6bda22cec214e9f92bd1621a8a9058cIAB...",
+                      "uid": 20,
+                      "appId": "a6bda22cec214e9f92bd1621a8a9058c",
+                      "scheduled_time": "2026-04-27T09:00:00.000Z",
+                      "expires_at": "2026-04-27T09:20:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
           },
           "403": {
             "$ref": "#/components/responses/Suspended"
@@ -1641,12 +1779,38 @@
           "Account"
         ],
         "summary": "Delete account permanently — screen 48 (cascades all user data)",
+        "description": "Permanently deletes the account and all associated data (photos, matches, messages, availability, notifications).\n\n**Password users** must supply their current `password` in the request body — deletion is rejected with `401` if it doesn't match.\n\n**Social login users** (Google / Facebook / Apple) have no password and are deleted immediately after JWT verification.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "example": "MySecret@123",
+                    "description": "Required for email/password accounts. Omit for social login accounts."
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Account deleted"
+            "description": "Account deleted successfully"
+          },
+          "400": {
+            "description": "Password missing (email/password accounts only)"
+          },
+          "401": {
+            "description": "Incorrect password"
           },
           "403": {
             "$ref": "#/components/responses/Suspended"
+          },
+          "404": {
+            "description": "User not found"
           }
         }
       }

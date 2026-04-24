@@ -70,7 +70,7 @@ const VideoCall = {
   // Calls whose scheduled_time is between (now + minMin) and (now + maxMin) and not yet notified
   async getUpcomingUnnotified(minMin, maxMin) {
     const [rows] = await pool.query(
-      `SELECT vc.call_id, vc.match_id, vc.scheduled_time,
+      `SELECT vc.call_id, vc.match_id, vc.scheduled_time, vc.channel_name,
               m.user1_id, m.user2_id
        FROM video_calls vc
        JOIN matches m ON vc.match_id = m.match_id

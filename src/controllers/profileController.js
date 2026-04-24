@@ -124,6 +124,27 @@ exports.updateFcmToken = async (req, res) => {
   }
 };
 
+// PUT /api/profile/photo/primary
+// Promotes an existing gallery photo to users.profile_photo_url
+exports.setProfilePhoto = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { photo_id } = req.body;
+    if (!photo_id) {
+      return res.status(400).json(apiResponse({ status: false, message: 'photo_id is required', data: [] }));
+    }
+    const photo = await UserPhoto.getById(userId, parseInt(photo_id));
+    if (!photo) {
+      return res.status(404).json(apiResponse({ status: false, message: 'Photo not found or does not belong to you', data: [] }));
+    }
+    await User.updateFields('profile_photo_url = ?', [photo.photo_url, userId]);
+    res.status(200).json(apiResponse({ status: true, message: 'Profile photo updated', data: [{ profile_photo_url: photo.photo_url }] }));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
+  }
+};
+
 // DELETE /api/profile/photo/:photoId
 exports.deleteProfilePhoto = async (req, res) => {
   try {

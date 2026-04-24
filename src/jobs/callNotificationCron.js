@@ -3,6 +3,7 @@ const pool = require('../config/db');
 const VideoCall = require('../models/VideoCall');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const { generateRtcToken } = require('../services/agoraService');
 const { sendSMS, SMS } = require('../helpers/smsHelper');
 
 // Runs every minute:
@@ -48,19 +49,33 @@ async function notifyUpcomingCalls() {
     const msgFor = (otherName) =>
       `Your video call with ${otherName || 'your match'} starts in 10 minutes!`;
 
+    // Generate a fresh Agora token for each participant
+    const token1 = call.channel_name ? generateRtcToken(call.channel_name, call.user1_id) : null;
+    const token2 = call.channel_name ? generateRtcToken(call.channel_name, call.user2_id) : null;
+
+    // Notification data payload — Flutter uses this to join the call directly
+    const dataFor = (uid, rtcToken) => ({
+      call_id:        String(call.call_id),
+      channel_name:   call.channel_name  || '',
+      rtc_token:      rtcToken           || '',
+      uid:            String(uid),
+      app_id:         process.env.AGORA_APP_ID || '',
+      scheduled_time: call.scheduled_time ? new Date(call.scheduled_time).toISOString() : '',
+    });
+
     await Promise.all([
       Notification.create(
         call.user1_id,
         'video_call',
         msgFor(user2?.full_name),
-        { call_id: String(call.call_id) },
+        dataFor(call.user1_id, token1),
         call.call_id
       ),
       Notification.create(
         call.user2_id,
         'video_call',
         msgFor(user1?.full_name),
-        { call_id: String(call.call_id) },
+        dataFor(call.user2_id, token2),
         call.call_id
       ),
       VideoCall.markNotified(call.call_id),
