@@ -127,8 +127,9 @@ exports.postCallFeedback = async (req, res) => {
       return res.status(403).json(apiResponse({ status: false, message: 'Not authorized', data: [] }));
     }
 
-    // Mark call as completed
+    // Mark call as completed and disable spark mode
     await VideoCall.updateStatus(callId, 'completed');
+    await Match.disableSparkMode(call.match_id);
 
     // If "not a match", unmatch the users
     if (feedback === 'not_a_match') {

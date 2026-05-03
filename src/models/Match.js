@@ -14,10 +14,10 @@ const Match = {
     // Only check for mutual match on like or superlike
     if (action === 'dislike') return { result: 'disliked' };
 
-    // Check if the other user already liked/superliked back
+    // Check if the other user already liked back
     const [rows] = await pool.query(
       `SELECT swipe_id FROM swipes
-       WHERE from_user = ? AND to_user = ? AND action IN ('like', 'superlike')`,
+       WHERE from_user = ? AND to_user = ? AND action = 'like'`,
       [to_user, from_user]
     );
 
@@ -38,17 +38,13 @@ const Match = {
     return Match.swipe(from_user, to_user, 'like');
   },
 
-  async superlikeUser(from_user, to_user) {
-    return Match.swipe(from_user, to_user, 'superlike');
-  },
-
   async dislikeUser(from_user, to_user) {
     return Match.swipe(from_user, to_user, 'dislike');
   },
 
   async getMatches(user_id) {
     const [rows] = await pool.query(
-      `SELECT m.match_id, m.user1_id, m.user2_id, m.status, m.created_at,
+      `SELECT m.match_id, m.user1_id, m.user2_id, m.status, m.spark_mode, m.created_at,
               CASE WHEN m.user1_id = ? THEN m.user2_id ELSE m.user1_id END AS matched_user_id
        FROM matches m
        WHERE (m.user1_id = ? OR m.user2_id = ?) AND m.status = 'matched'
@@ -102,6 +98,13 @@ const Match = {
       `UPDATE matches SET status = 'blocked'
        WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)`,
       [user1_id, user2_id, user2_id, user1_id]
+    );
+  },
+
+  async disableSparkMode(match_id) {
+    await pool.query(
+      'UPDATE matches SET spark_mode = 0 WHERE match_id = ?',
+      [match_id]
     );
   }
 };
