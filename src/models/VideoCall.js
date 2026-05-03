@@ -112,6 +112,30 @@ const VideoCall = {
       "UPDATE video_calls SET status = 'cancelled' WHERE call_id = ?",
       [call_id]
     );
+  },
+
+  async getScheduledForMatch(match_id) {
+    const [rows] = await pool.query(
+      `SELECT call_id, match_id, scheduled_time, status, channel_name
+       FROM video_calls
+       WHERE match_id = ? AND status IN ('scheduled', 'active')
+       LIMIT 1`,
+      [match_id]
+    );
+    return rows[0] || null;
+  },
+
+  async hasConflictAtTime(user_id, scheduled_time) {
+    const [rows] = await pool.query(
+      `SELECT vc.call_id FROM video_calls vc
+       JOIN matches m ON vc.match_id = m.match_id
+       WHERE (m.user1_id = ? OR m.user2_id = ?)
+         AND vc.scheduled_time = ?
+         AND vc.status IN ('scheduled', 'active')
+       LIMIT 1`,
+      [user_id, user_id, scheduled_time]
+    );
+    return rows[0] || null;
   }
 };
 

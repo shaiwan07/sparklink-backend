@@ -7,21 +7,6 @@ const { buildChannelName, generateRtcToken } = require('../services/agoraService
 const MSG = require('../constants/error');
 const { sendSMS, SMS } = require('../helpers/smsHelper');
 
-const DAY_MAP = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-
-// Returns the next wall-clock datetime for a given day + time (recurring weekly slot)
-function nextOccurrence(dayOfWeek, startTime) {
-  const targetDay = DAY_MAP[dayOfWeek];
-  const [hh, mm] = startTime.split(':').map(Number);
-  const now  = new Date();
-  const next = new Date(now);
-  next.setHours(hh, mm, 0, 0);
-  let daysUntil = (targetDay - now.getDay() + 7) % 7;
-  if (daysUntil === 0 && next <= now) daysUntil = 7; // same day but time already passed
-  next.setDate(next.getDate() + daysUntil);
-  return next;
-}
-
 function apiResponse({ status, message, data }) {
   return { status, message, data };
 }
@@ -29,15 +14,6 @@ function apiResponse({ status, message, data }) {
 // ─────────────────────────────────────────────────────────────
 // POST /api/video-calls
 // Body: { match_id, availability_id }
-//
-// Flow:
-//   1. Look up the availability slot (must belong to one match participant).
-//   2. Verify the other participant has an overlapping slot on the same day.
-//   3. Derive scheduled_time as the next wall-clock occurrence of that day+time.
-//   4. Create the Agora channel. Both users call this endpoint — the second
-//      caller re-uses the existing channel and gets their own RTC token.
-//
-// Returns: { call_id, channelName, rtcToken, uid, appId, scheduled_time }
 // ─────────────────────────────────────────────────────────────
 exports.scheduleCall = async (req, res) => {
   try {
@@ -59,6 +35,16 @@ exports.scheduleCall = async (req, res) => {
         status: false,
         message: 'You are already in an active call',
         data: [{ call_id: activeCall.call_id }]
+      }));
+    }
+
+    // Prevent duplicate: reject if a scheduled/active call already exists for this match
+    const existingScheduled = await VideoCall.getScheduledForMatch(match_id);
+    if (existingScheduled) {
+      return res.status(409).json(apiResponse({
+        status: false,
+        message: 'A call is already scheduled for this match. Cannot schedule another.',
+        data: [{ call_id: existingScheduled.call_id, scheduled_time: existingScheduled.scheduled_time }]
       }));
     }
 
@@ -93,82 +79,80 @@ exports.scheduleCall = async (req, res) => {
       }));
     }
 
-    // Verify the other participant has an overlapping slot on the same day
-    const overlaps = await Availability.getOverlap(slotOwner, otherUser, slot.day_of_week);
-    if (overlaps.length === 0) {
+    // Verify the other participant has a matching slot on the same date+time
+    const overlaps = await Availability.getOverlap(slotOwner, otherUser, slot.slot_date);
+    const hasOverlap = overlaps.some(o => String(o.slot_time).slice(0, 5) === String(slot.slot_time).slice(0, 5));
+    if (!hasOverlap) {
       return res.status(400).json(apiResponse({
         status: false,
-        message: `No availability overlap on ${slot.day_of_week}. Both users must have matching time slots.`,
+        message: `No availability overlap on ${slot.slot_date}. Both users must have matching time slots.`,
         data: []
       }));
     }
 
-    // Derive the next real-world datetime for this recurring slot
-    const scheduled_time = nextOccurrence(slot.day_of_week, slot.start_time);
+    // Build scheduled_time from slot_date + slot_time
+    const scheduled_time = new Date(`${slot.slot_date}T${slot.slot_time}`);
 
-    // Check if a call already exists for this match
-    let existing = await VideoCall.getByMatchId(match_id);
-    let channelName, call_id;
-
-    if (existing && existing.channel_name) {
-      // Reject if the previous call window has closed
-      if (['expired', 'cancelled', 'completed'].includes(existing.status)) {
-        return res.status(410).json(apiResponse({
-          status: false,
-          message: `Previous call is ${existing.status}. Please schedule a new one.`,
-          data: []
-        }));
-      }
-      // Re-use existing channel so both users land in the same Agora room
-      channelName = existing.channel_name;
-      call_id     = existing.call_id;
-      // Mark active once a second participant joins
-      if (existing.status === 'scheduled') {
-        await VideoCall.updateStatus(call_id, 'active');
-      }
-    } else {
-      // First caller — create the call record
-      channelName = buildChannelName(match_id);
-      call_id     = await VideoCall.schedule(
-        match_id,
-        scheduled_time,
-        channelName,
-        null  // token is per-uid, generated fresh each request
-      );
-
-      // Notify both participants
-      const timeStr = scheduled_time.toLocaleString();
-      const msg = `Your video call has been scheduled for ${timeStr}`;
-      Promise.all([
-        Notification.create(match.user1_id, 'video_call', msg, { call_id: String(call_id) }, call_id),
-        Notification.create(match.user2_id, 'video_call', msg, { call_id: String(call_id) }, call_id),
-      ]).catch(() => {});
-
-      const [u1, u2] = await Promise.all([User.findById(match.user1_id), User.findById(match.user2_id)]);
-      sendSMS(u1?.phone, SMS.callScheduled(u2?.full_name || 'your match', timeStr)).catch(() => {});
-      sendSMS(u2?.phone, SMS.callScheduled(u1?.full_name || 'your match', timeStr)).catch(() => {});
+    // Prevent time conflict: neither user can have another call at this same time
+    const [callerConflict, otherConflict] = await Promise.all([
+      VideoCall.hasConflictAtTime(caller_id, scheduled_time),
+      VideoCall.hasConflictAtTime(otherUser, scheduled_time),
+    ]);
+    if (callerConflict) {
+      return res.status(409).json(apiResponse({
+        status: false,
+        message: 'You already have a call scheduled at this time.',
+        data: [{ conflicting_call_id: callerConflict.call_id }]
+      }));
+    }
+    if (otherConflict) {
+      return res.status(409).json(apiResponse({
+        status: false,
+        message: 'The other user already has a call scheduled at this time.',
+        data: []
+      }));
     }
 
-    // Generate a caller-specific RTC token (uid = user_id)
+    // Create the call record
+    const channelName = buildChannelName(match_id);
+    const call_id = await VideoCall.schedule(
+      match_id,
+      scheduled_time,
+      channelName,
+      null
+    );
+
+    // Notify both participants
+    const timeStr = scheduled_time.toLocaleString();
+    const msg = `Your video call has been scheduled for ${timeStr}`;
+    Promise.all([
+      Notification.create(match.user1_id, 'video_call', msg, { call_id: String(call_id) }, call_id),
+      Notification.create(match.user2_id, 'video_call', msg, { call_id: String(call_id) }, call_id),
+    ]).catch(() => {});
+
+    const [u1, u2] = await Promise.all([User.findById(match.user1_id), User.findById(match.user2_id)]);
+    sendSMS(u1?.phone, SMS.callScheduled(u2?.full_name || 'your match', timeStr)).catch(() => {});
+    sendSMS(u2?.phone, SMS.callScheduled(u1?.full_name || 'your match', timeStr)).catch(() => {});
+
+    // Generate a caller-specific RTC token
     const uid = caller_id;
     const rtcToken = generateRtcToken(channelName, uid);
 
     return res.status(200).json(apiResponse({
       status:  true,
-      message: 'Video call ready',
+      message: 'Video call scheduled',
       data: [{
         call_id,
         channelName,
         rtcToken,
         uid,
         appId:          process.env.AGORA_APP_ID,
-        scheduled_time: existing ? existing.scheduled_time : scheduled_time,
+        scheduled_time,
       }]
     }));
 
   } catch (err) {
     console.error('[VideoCall]', err.message);
-    // Surface Agora config errors clearly
     if (err.message.includes('AGORA_APP')) {
       return res.status(500).json(apiResponse({
         status: false,
@@ -180,7 +164,7 @@ exports.scheduleCall = async (req, res) => {
   }
 };
 
-// Shapes a raw DB call row into the same response format as scheduleCall
+// Shapes a raw DB call row into the response format
 function shapeCall(call, uid) {
   const channelName = call.channel_name || null;
   return {
@@ -198,7 +182,6 @@ function shapeCall(call, uid) {
 
 // ─────────────────────────────────────────────────────────────
 // GET /api/video-calls
-// Returns all calls the logged-in user is part of
 // ─────────────────────────────────────────────────────────────
 exports.getUserCalls = async (req, res) => {
   try {
