@@ -23,30 +23,26 @@
       "Slot": {
         "type": "object",
         "required": [
-          "day_of_week",
-          "start_time",
-          "end_time"
+          "date",
+          "time"
         ],
         "properties": {
-          "day_of_week": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-05-04",
+            "description": "Date for the slot (today or tomorrow only)"
+          },
+          "time": {
             "type": "string",
             "enum": [
-              "Mon",
-              "Tue",
-              "Wed",
-              "Thu",
-              "Fri",
-              "Sat",
-              "Sun"
-            ]
-          },
-          "start_time": {
-            "type": "string",
-            "example": "09:00:00"
-          },
-          "end_time": {
-            "type": "string",
-            "example": "12:00:00"
+              "00:00", "01:00", "02:00", "03:00", "04:00", "05:00",
+              "06:00", "07:00", "08:00", "09:00", "10:00", "11:00",
+              "12:00", "13:00", "14:00", "15:00", "16:00", "17:00",
+              "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"
+            ],
+            "example": "10:00",
+            "description": "Hourly time slot (any hour of the day)"
           }
         }
       }
@@ -700,10 +696,29 @@
           "Matches"
         ],
         "summary": "Get all confirmed matches for current user",
-        "description": "Returns all mutual matches (status = matched) for the logged-in user. Each record includes `match_id` which is required for `GET /api/matches/{matchId}/profile` and `POST /api/video-calls`.",
+        "description": "Returns all mutual matches (status = matched) for the logged-in user. Each record includes `match_id` and `spark_mode`.\n\n**spark_mode values:**\n- `1` — Spark Mode active. Both users are locked 1-on-1. No swiping allowed. Must complete the video call flow first.\n- `0` — Normal. Users are free to browse and like others.\n\nUse `match_id` for `GET /api/matches/{matchId}/profile` and `POST /api/video-calls`.",
         "responses": {
           "200": {
-            "description": "Matches list — each includes match_id, matched_user_id"
+            "description": "Matches list",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Matches fetched",
+                  "data": [
+                    {
+                      "match_id": 7,
+                      "user1_id": 28,
+                      "user2_id": 29,
+                      "status": "matched",
+                      "spark_mode": 1,
+                      "created_at": "2026-04-23T17:53:07.000Z",
+                      "matched_user_id": 29
+                    }
+                  ]
+                }
+              }
+            }
           },
           "403": {
             "$ref": "#/components/responses/Suspended"
@@ -717,10 +732,10 @@
           "Matches"
         ],
         "summary": "Get potential matches — screen 44",
-        "description": "Returns all verified users matching the caller's gender/age/distance preferences, excluding only blocked users. Each candidate carries an `interaction_status` flag so Flutter can render the correct heart state without a second API call.\n\n**interaction_status values:**\n- `null` — no interaction yet\n- `i_liked` — caller already liked them\n- `i_superliked` — caller already superliked them\n- `i_disliked` — caller already disliked them\n- `they_liked` — they liked the caller (show indicator)\n- `matched` — mutual match confirmed\n\n**match_id** is non-null only when `interaction_status === 'matched'` — pass it to `GET /api/matches/{matchId}/profile`.\n\n**has_my_availability** / **has_their_availability** — booleans indicating whether each side has set recurring time slots. Both must be true before a video call can be scheduled.",
+        "description": "Returns all verified users matching the caller's gender/age/distance preferences. Excludes blocked users and **users currently in Spark Mode** (locked in another match).\n\nEach candidate carries an `interaction_status` flag so Flutter can render the correct heart state without a second API call.\n\n**interaction_status values:**\n- `null` — no interaction yet\n- `i_liked` — caller already liked them\n- `i_disliked` — caller already disliked them\n- `they_liked` — they liked the caller (show indicator)\n- `matched` — mutual match confirmed\n\n**match_id** is non-null only when `interaction_status === 'matched'` — pass it to `GET /api/matches/{matchId}/profile`.\n\n**has_my_availability** / **has_their_availability** — booleans indicating whether each side has set time slots (today/tomorrow). Both must be true before a video call can be scheduled.\n\n**Spark Mode exclusion:** If a user is in Spark Mode (`spark_mode = 1` in any match), they will NOT appear in this list for other users.",
         "responses": {
           "200": {
-            "description": "Candidates sorted: they_liked → null → liked/superliked → matched → disliked, then by match_percentage desc",
+            "description": "Candidates sorted: they_liked → null → liked → matched → disliked, then by match_percentage desc",
             "content": {
               "application/json": {
                 "example": {
@@ -760,7 +775,7 @@
           "Matches"
         ],
         "summary": "Like a user — swipe right",
-        "description": "Records a like in the swipes table. If the target user has already liked the caller, a mutual match is created automatically (status = matched) and both users receive a push notification. The response contains `result: 'liked'` or `result: 'matched'`.",
+        "description": "Records a like in the swipes table. If the target user has already liked the caller, a mutual match is created automatically (status = matched) and both users receive a push notification.\n\n**Spark Mode:** When a match is created, `spark_mode` is set to `1`. Both users are locked 1-on-1 — neither can like or be liked by anyone else. They must complete the video call flow and give feedback before Spark Mode is disabled.\n\n**403 responses:**\n- If the caller is in Spark Mode: `'You are in Spark Mode with your current match. Finish that connection first.'`\n- If the target user is in Spark Mode: `'This user is currently in Spark Mode with another match.'`",
         "requestBody": {
           "required": true,
           "content": {
@@ -782,41 +797,6 @@
         "responses": {
           "200": {
             "description": "result: \"liked\" or \"matched\""
-          },
-          "403": {
-            "$ref": "#/components/responses/Suspended"
-          }
-        }
-      }
-    },
-    "/api/matches/superlike": {
-      "post": {
-        "tags": [
-          "Matches"
-        ],
-        "summary": "Superlike a user",
-        "description": "Same as like but records action as `superlike`. The target user's notification will show a superlike indicator. Auto-creates a match if mutual.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "user_id"
-                ],
-                "properties": {
-                  "user_id": {
-                    "type": "integer"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "result: \"superliked\" or \"matched\""
           },
           "403": {
             "$ref": "#/components/responses/Suspended"
@@ -935,7 +915,7 @@
           "Matches"
         ],
         "summary": "Full profile of matched user with compatibility analysis — screens 50-51",
-        "description": "Returns the full profile of the other participant in a confirmed match.\n\nIncludes the same status flags as the potential-matches list so Flutter can drive the availability/scheduling UI without a separate call:\n- **`interaction_status`** — always `'matched'` on this endpoint\n- **`has_my_availability`** — `true` if the caller has set recurring time slots\n- **`has_their_availability`** — `true` if the matched user has set recurring time slots\n\nBoth availability flags must be `true` before a video call can be scheduled. If either is `false`, show the 'Set Availability' or 'Request Availability' button accordingly.",
+        "description": "Returns the full profile of the other participant in a confirmed match.\n\nIncludes the same status flags as the potential-matches list so Flutter can drive the availability/scheduling UI without a separate call:\n- **`interaction_status`** — always `'matched'` on this endpoint\n- **`has_my_availability`** — `true` if the caller has set availability time slots (today/tomorrow)\n- **`has_their_availability`** — `true` if the matched user has set availability time slots (today/tomorrow)\n\nBoth availability flags must be `true` before a video call can be scheduled. If either is `false`, show the 'Set Availability' or 'Request Availability' button accordingly.",
         "parameters": [
           {
             "name": "matchId",
@@ -1035,10 +1015,23 @@
           "Availability"
         ],
         "summary": "Get my availability slots — screen 52",
-        "description": "Returns all recurring weekly time slots the caller has set. Each slot has an `id` that can be passed to `POST /api/video-calls` as `availability_id` when scheduling a call.",
+        "description": "Returns all date-based time slots the caller has set. Each slot has an `id`, `slot_date`, and `slot_time`. The `id` can be passed to `POST /api/video-calls` as `availability_id` when scheduling a call.",
         "responses": {
           "200": {
-            "description": "Array of { id, day_of_week, start_time, end_time }"
+            "description": "Array of { id, slot_date, slot_time }",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": true,
+                  "message": "Availability fetched",
+                  "data": [
+                    { "id": 1, "slot_date": "2026-05-04", "slot_time": "10:00:00" },
+                    { "id": 2, "slot_date": "2026-05-04", "slot_time": "14:00:00" },
+                    { "id": 3, "slot_date": "2026-05-05", "slot_time": "09:00:00" }
+                  ]
+                }
+              }
+            }
           },
           "403": {
             "$ref": "#/components/responses/Suspended"
@@ -1050,7 +1043,7 @@
           "Availability"
         ],
         "summary": "Set my availability — screen 52 (replaces all existing slots)",
-        "description": "Replaces the caller's entire availability schedule with the provided slots. Send an empty array to clear all slots.",
+        "description": "Replaces the caller's entire availability with the provided slots. Send an empty array to clear all slots.\n\n**Rules:**\n- `date` must be today or tomorrow only\n- `time` must be a full hour from 00:00 to 23:00\n- Duplicate date+time pairs are rejected (unique constraint)",
         "requestBody": {
           "required": true,
           "content": {
@@ -1071,16 +1064,9 @@
               },
               "example": {
                 "slots": [
-                  {
-                    "day_of_week": "Mon",
-                    "start_time": "09:00:00",
-                    "end_time": "12:00:00"
-                  },
-                  {
-                    "day_of_week": "Mon",
-                    "start_time": "14:00:00",
-                    "end_time": "18:00:00"
-                  }
+                  { "date": "2026-05-04", "time": "10:00" },
+                  { "date": "2026-05-04", "time": "15:00" },
+                  { "date": "2026-05-05", "time": "09:00" }
                 ]
               }
             }
@@ -1091,7 +1077,7 @@
             "description": "Availability updated"
           },
           "400": {
-            "description": "Invalid slot format"
+            "description": "Invalid slot format, invalid time, or date not today/tomorrow"
           },
           "403": {
             "$ref": "#/components/responses/Suspended"
@@ -1167,7 +1153,7 @@
           "Availability"
         ],
         "summary": "Get overlapping time slots with a match — screens 52-53",
-        "description": "Computes recurring weekly time windows where both matched users are available. Each result includes `availability_id` (the caller's slot ID) — pass this directly to `POST /api/video-calls` to schedule the call. An empty array means the users have no overlapping slots (show screen 53 no-overlap state). Add `?day=Mon` to filter by a specific weekday.",
+        "description": "Finds date+time slots where both matched users are available on the same day at the same time. Each result includes `availability_id` (the caller's slot ID) — pass this directly to `POST /api/video-calls` to schedule the call.\n\nAn empty array means no overlapping slots (show screen 53 'No matching times on this day').\n\nAdd `?date=2026-05-04` to filter by a specific date.",
         "parameters": [
           {
             "name": "matchId",
@@ -1179,22 +1165,15 @@
             "description": "The match_id from the matches table"
           },
           {
-            "name": "day",
+            "name": "date",
             "in": "query",
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "Mon",
-                "Tue",
-                "Wed",
-                "Thu",
-                "Fri",
-                "Sat",
-                "Sun"
-              ]
+              "format": "date",
+              "example": "2026-05-04"
             },
-            "description": "Optional filter — omit to return all overlapping days"
+            "description": "Optional date filter (YYYY-MM-DD) — omit to return all overlapping dates"
           }
         ],
         "responses": {
@@ -1205,14 +1184,25 @@
                 "example": {
                   "status": true,
                   "message": "Overlapping slots found",
-                  "data": [
-                    {
+                  "data": {
+                    "suggested": {
                       "availability_id": 3,
-                      "day_of_week": "Mon",
-                      "overlap_start": "10:00:00",
-                      "overlap_end": "12:00:00"
-                    }
-                  ]
+                      "slot_date": "2026-05-04",
+                      "slot_time": "11:00:00"
+                    },
+                    "overlaps": [
+                      {
+                        "availability_id": 3,
+                        "slot_date": "2026-05-04",
+                        "slot_time": "11:00:00"
+                      },
+                      {
+                        "availability_id": 7,
+                        "slot_date": "2026-05-05",
+                        "slot_time": "15:00:00"
+                      }
+                    ]
+                  }
                 }
               }
             }
@@ -1229,7 +1219,7 @@
           "Availability"
         ],
         "summary": "Get a matched user's availability — screen 52 match side",
-        "description": "Returns the recurring weekly availability slots of another user. Requires an active confirmed match between the caller and the target user — returns 403 otherwise.",
+        "description": "Returns the date-based availability slots of another user. Requires an active confirmed match between the caller and the target user — returns 403 otherwise.\n\nShows on screen 52 as 'Belle Benson is available at' section with Today/Tomorrow tabs.",
         "parameters": [
           {
             "name": "userId",
@@ -1242,7 +1232,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Match slots"
+            "description": "Array of { id, slot_date, slot_time }"
           },
           "403": {
             "description": "Not a match — access denied"
@@ -1256,7 +1246,7 @@
           "Video Calls"
         ],
         "summary": "Schedule a video call — screen 52 (Schedule Call button)",
-        "description": "Schedules a video call between two matched users. The caller picks an overlapping availability slot from `GET /api/availability/overlap/{matchId}` and passes its `availability_id` here. The backend verifies that both participants have matching availability on that day, then computes the next real-world occurrence of that recurring time slot as `scheduled_time`.\n\n**Flow:**\n1. Call `GET /api/availability/overlap/{matchId}` — get overlapping slots\n2. User taps a slot → its `availability_id` is sent here\n3. Backend validates overlap, creates the Agora channel, and returns RTC credentials\n4. Both users call this endpoint with the **same** `match_id` — the second caller re-uses the existing channel and receives their own RTC token\n5. A push notification is sent to both users with the scheduled time\n\n**Error cases:**\n- `400` if either `match_id` or `availability_id` is missing\n- `400` if no overlap exists on that day\n- `404` if the availability slot does not exist\n- `409` if the caller is already in an active call\n- `410` if the previous call for this match has expired/cancelled/completed",
+        "description": "Schedules a video call between two matched users. The caller picks an overlapping availability slot from `GET /api/availability/overlap/{matchId}` and passes its `availability_id` here.\n\nThe backend verifies that both participants have matching availability on that date+time, then uses `slot_date + slot_time` directly as `scheduled_time`.\n\n**Flow:**\n1. Both users set their availability via `POST /api/availability`\n2. Call `GET /api/availability/overlap/{matchId}?date=2026-05-04` — get matching time slots\n3. User taps a slot → its `availability_id` is sent here\n4. Backend validates overlap, creates the Agora channel, returns RTC credentials\n5. Push notification sent to both users with the scheduled time\n\n**Duplicate prevention:**\n- If a `scheduled` or `active` call already exists for this match → 409\n- If **either user** (caller or the other user) already has a call at the **same time** with someone else → 409\n\n**Error cases:**\n- `400` if either `match_id` or `availability_id` is missing\n- `400` if no overlap exists on that date\n- `404` if the availability slot does not exist\n- `409` if a call is already scheduled/active for this match\n- `409` if the caller already has a call at this time\n- `409` if the other user already has a call at this time",
         "requestBody": {
           "required": true,
           "content": {
@@ -1276,7 +1266,7 @@
                   "availability_id": {
                     "type": "integer",
                     "example": 3,
-                    "description": "The `availability_id` from `GET /api/availability/overlap/{matchId}` — identifies the overlapping recurring time slot"
+                    "description": "The `availability_id` from `GET /api/availability/overlap/{matchId}` — identifies the matching date+time slot"
                   }
                 }
               }
@@ -1290,7 +1280,7 @@
               "application/json": {
                 "example": {
                   "status": true,
-                  "message": "Video call ready",
+                  "message": "Video call scheduled",
                   "data": [
                     {
                       "call_id": 5,
@@ -1312,10 +1302,7 @@
             "description": "Caller is not a participant of this match"
           },
           "409": {
-            "description": "Caller is already in an active call"
-          },
-          "410": {
-            "description": "Previous call for this match has expired, been cancelled, or completed — schedule a new one"
+            "description": "A call is already scheduled/active for this match, or caller is already in an active call"
           }
         }
       },
@@ -1465,6 +1452,7 @@
           "Video Calls"
         ],
         "summary": "Post-call feedback — screen 56 (Love it / Not a Match buttons)",
+        "description": "Records the user's post-call decision. This endpoint also **disables Spark Mode** (`spark_mode = 0`) on the match, freeing both users to browse again.\n\n- `love_it`: Match stays active, spark_mode disabled, users can now like others\n- `not_a_match`: Match is unmatched, spark_mode disabled, users return to browsing",
         "parameters": [
           {
             "name": "callId",
@@ -1499,7 +1487,7 @@
         },
         "responses": {
           "200": {
-            "description": "Feedback recorded. not_a_match also unmatches the two users."
+            "description": "Feedback recorded. Spark Mode disabled on the match. not_a_match also unmatches the two users."
           },
           "403": {
             "description": "Not authorized"
@@ -2094,7 +2082,7 @@
           "Users"
         ],
         "summary": "Get public profile of any user (pre-match)",
-        "description": "Used when tapping a liked/superliked notification to view who liked you, before a match exists. Returns safe public fields only — no phone, email, or Instagram.",
+        "description": "Used when tapping a liked notification to view who liked you, before a match exists. Returns safe public fields only — no phone, email, or Instagram.",
         "security": [
           {
             "bearerAuth": []
