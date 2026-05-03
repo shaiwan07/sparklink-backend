@@ -22,7 +22,7 @@ exports.getMyAvailability = async (req, res) => {
 };
 
 // POST /api/availability  — set/replace my availability slots
-// Body: { slots: [{ day_of_week, start_time, end_time }] }
+// Body: { slots: [{ date: "2026-05-04", time: "10:00" }] }
 exports.setMyAvailability = async (req, res) => {
   try {
     const user_id = req.user.id;
@@ -30,16 +30,40 @@ exports.setMyAvailability = async (req, res) => {
     if (!Array.isArray(slots)) {
       return res.status(400).json(apiResponse({ status: false, message: 'slots array required', data: [] }));
     }
-    const validDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayAfter = new Date(today);
+    dayAfter.setDate(dayAfter.getDate() + 2);
+
     for (const s of slots) {
-      if (!validDays.includes(s.day_of_week) || !s.start_time || !s.end_time) {
+      if (!s.date || !s.time) {
         return res.status(400).json(apiResponse({
           status: false,
-          message: 'Each slot needs day_of_week (Mon-Sun), start_time and end_time',
+          message: 'Each slot needs date and time',
+          data: []
+        }));
+      }
+      if (!Availability.ALLOWED_TIMES.includes(s.time)) {
+        return res.status(400).json(apiResponse({
+          status: false,
+          message: `Invalid time. Allowed times: ${Availability.ALLOWED_TIMES.join(', ')}`,
+          data: []
+        }));
+      }
+      const slotDate = new Date(s.date);
+      slotDate.setHours(0, 0, 0, 0);
+      if (slotDate < today || slotDate >= dayAfter) {
+        return res.status(400).json(apiResponse({
+          status: false,
+          message: 'Slots can only be set for today or tomorrow',
           data: []
         }));
       }
     }
+
     await Availability.set(user_id, slots);
     res.status(200).json(apiResponse({ status: true, message: 'Availability updated', data: [] }));
   } catch (err) {
@@ -68,13 +92,11 @@ exports.getUserAvailability = async (req, res) => {
 };
 
 // POST /api/availability/request/:matchId  — ask the other user to set their availability
-// Max 3 requests per (match, requester) pair.
 exports.requestAvailability = async (req, res) => {
   try {
     const from_user_id = req.user.id;
     const matchId      = parseInt(req.params.matchId);
 
-    // Verify this is a confirmed match the caller is part of
     const match = await Match.getMatchById(matchId);
     if (!match || (match.user1_id !== from_user_id && match.user2_id !== from_user_id)) {
       return res.status(403).json(apiResponse({ status: false, message: 'Not authorized for this match', data: [] }));
@@ -82,7 +104,6 @@ exports.requestAvailability = async (req, res) => {
 
     const to_user_id = match.user1_id === from_user_id ? match.user2_id : match.user1_id;
 
-    // If the other user already has availability set, no request needed
     const theirSlots = await Availability.getByUser(to_user_id);
     if (theirSlots.length > 0) {
       return res.status(400).json(apiResponse({
@@ -92,7 +113,6 @@ exports.requestAvailability = async (req, res) => {
       }));
     }
 
-    // Enforce the 3-request limit — check BEFORE incrementing
     const currentCount = await AvailabilityRequest.getCount(matchId, from_user_id);
     if (currentCount >= AvailabilityRequest.MAX_REQUESTS) {
       return res.status(429).json(apiResponse({
@@ -102,16 +122,13 @@ exports.requestAvailability = async (req, res) => {
       }));
     }
 
-    // Increment counter and send notification
     const newCount = await AvailabilityRequest.increment(matchId, from_user_id, to_user_id);
     const remaining = AvailabilityRequest.MAX_REQUESTS - newCount;
 
-    // Fetch requester name for the notification message
     const requester = await User.findById(from_user_id);
     const requesterName = requester?.full_name || 'Your match';
     const msg = `${requesterName} wants to schedule a video date with you! Please add your available times so you can connect.`;
 
-    // reference_id = from_user_id so the recipient can navigate to the requester's profile
     Notification.create(to_user_id, 'availability_request', msg, {}, from_user_id).catch(() => {});
 
     return res.status(200).json(apiResponse({
@@ -127,12 +144,12 @@ exports.requestAvailability = async (req, res) => {
   }
 };
 
-// GET /api/availability/overlap/:matchId?day=Mon  — find overlapping slots
+// GET /api/availability/overlap/:matchId?date=2026-05-04  — find overlapping slots
 exports.getOverlap = async (req, res) => {
   try {
     const my_id = req.user.id;
     const { matchId } = req.params;
-    const { day } = req.query;
+    const { date } = req.query;
 
     const match = await Match.getMatchById(matchId);
     if (!match || (match.user1_id !== my_id && match.user2_id !== my_id)) {
@@ -140,12 +157,22 @@ exports.getOverlap = async (req, res) => {
     }
 
     const other_id = match.user1_id === my_id ? match.user2_id : match.user1_id;
-    const overlaps = await Availability.getOverlap(my_id, other_id, day || null);
+    const overlaps = await Availability.getOverlap(my_id, other_id, date || null);
+
+    // Suggest the earliest overlapping slot
+    const suggested = overlaps.length > 0 ? {
+      availability_id: overlaps[0].availability_id,
+      slot_date: overlaps[0].slot_date,
+      slot_time: overlaps[0].slot_time
+    } : null;
 
     res.status(200).json(apiResponse({
       status: true,
-      message: overlaps.length ? 'Overlapping slots found' : 'No matching times',
-      data: overlaps
+      message: overlaps.length ? 'Overlapping slots found' : 'No matching times on this day',
+      data: {
+        suggested,
+        overlaps
+      }
     }));
   } catch (err) {
     console.error(err);
