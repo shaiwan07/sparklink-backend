@@ -128,7 +128,17 @@ const User = {
       WHERE (user1_id = ? OR user2_id = ?) AND status = 'blocked'
       UNION
       SELECT ? AS excluded_id
-    `, [userId, userId, userId, userId]);
+      UNION
+      SELECT DISTINCT user1_id AS excluded_id
+      FROM matches
+      WHERE spark_mode = 1 AND status = 'matched'
+        AND user1_id != ?
+      UNION
+      SELECT DISTINCT user2_id AS excluded_id
+      FROM matches
+      WHERE spark_mode = 1 AND status = 'matched'
+        AND user2_id != ?
+    `, [userId, userId, userId, userId, userId, userId]);
     return rows.map(r => r.excluded_id);
   },
 

@@ -20,7 +20,6 @@ const HIDDEN = new Set([
  * Possible values (used by Flutter to render the correct UI):
  *   null           — no interaction yet
  *   'i_liked'      — I already liked them (heart turns solid, can still dislike)
- *   'i_superliked' — I already superliked them
  *   'i_disliked'   — I already disliked them
  *   'they_liked'   — They liked me, I haven't responded yet (show indicator)
  *   'matched'      — Mutual match confirmed
@@ -28,10 +27,8 @@ const HIDDEN = new Set([
 function computeInteractionStatus(candidateId, mySwipes, theirSwipes, matchedIds) {
   if (matchedIds.has(candidateId))              return 'matched';
   if (mySwipes[candidateId] === 'like')         return 'i_liked';
-  if (mySwipes[candidateId] === 'superlike')    return 'i_superliked';
   if (mySwipes[candidateId] === 'dislike')      return 'i_disliked';
-  if (theirSwipes[candidateId] === 'like' ||
-      theirSwipes[candidateId] === 'superlike') return 'they_liked';
+  if (theirSwipes[candidateId] === 'like')      return 'they_liked';
   return null;
 }
 
@@ -115,7 +112,7 @@ exports.getPotentialMatches = async (req, res) => {
     }
 
     // Sort: unresponded first, then by match percentage
-    const ORDER = { they_liked: 0, null: 1, i_liked: 2, i_superliked: 2, matched: 3, i_disliked: 4 };
+    const ORDER = { they_liked: 0, null: 1, i_liked: 2, matched: 3, i_disliked: 4 };
     results.sort((a, b) => {
       const diff = (ORDER[a.interaction_status] ?? 1) - (ORDER[b.interaction_status] ?? 1);
       return diff !== 0 ? diff : b.match_percentage - a.match_percentage;

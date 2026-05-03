@@ -9,31 +9,20 @@ function apiResponse({ status, message, data }) {
 }
 
 /**
- * Send a like/superlike notification to the target user.
- * Uses the sender's name so the message reads: "Amelia liked your profile."
+ * Send a like notification to the target user.
  */
-async function notifyLike(from_user_id, to_user_id, type = 'liked') {
+async function notifyLike(from_user_id, to_user_id) {
   try {
     const [sender, recipient] = await Promise.all([
       User.findById(from_user_id),
       User.findById(to_user_id),
     ]);
     const senderName = sender?.full_name || 'Someone';
+    const message = `${senderName} liked your profile.`;
 
-    const message = type === 'superliked'
-      ? `${senderName} sent you a Superlike!`
-      : `${senderName} liked your profile.`;
-
-    // reference_id = from_user_id so the app can open that person's profile
-    await Notification.create(to_user_id, type, message, {}, from_user_id);
-
-    const smsBody = type === 'superliked'
-      ? SMS.superliked(senderName)
-      : SMS.liked(senderName);
-    sendSMS(recipient?.phone, smsBody).catch(() => {});
-  } catch (_) {
-    // Never let notification errors crash the like/superlike response
-  }
+    await Notification.create(to_user_id, 'liked', message, {}, from_user_id);
+    sendSMS(recipient?.phone, SMS.liked(senderName)).catch(() => {});
+  } catch (_) {}
 }
 
 /**
@@ -83,52 +72,12 @@ exports.likeUser = async (req, res) => {
     const result = await Match.likeUser(from_user, to_user);
 
     if (result.result === 'matched') {
-      // Mutual match — notify both, skip the plain "liked" notification
       notifyMatch(from_user, to_user);
     } else {
-      // One-sided like — notify the target
-      notifyLike(from_user, to_user, 'liked');
+      notifyLike(from_user, to_user);
     }
 
     const message = result.result === 'matched' ? "It's a Match!" : 'Like sent';
-    res.status(200).json(apiResponse({ status: true, message, data: [result] }));
-  } catch (err) {
-    console.error(err);
-    res.status(500).json(apiResponse({ status: false, message: MSG.SERVER_ERROR, data: [] }));
-  }
-};
-
-// POST /api/matches/superlike
-exports.superlikeUser = async (req, res) => {
-  try {
-    const from_user = req.user.id;
-    const { user_id } = req.body;
-    if (!user_id) {
-      return res.status(400).json(apiResponse({ status: false, message: 'user_id required', data: [] }));
-    }
-
-    const to_user = parseInt(user_id);
-
-    const [callerLocked, targetLocked] = await Promise.all([
-      Match.isInSparkMode(from_user),
-      Match.isInSparkMode(to_user),
-    ]);
-    if (callerLocked) {
-      return res.status(403).json(apiResponse({ status: false, message: 'You are in Spark Mode with your current match. Finish that connection first.', data: [] }));
-    }
-    if (targetLocked) {
-      return res.status(403).json(apiResponse({ status: false, message: 'This user is currently in Spark Mode with another match.', data: [] }));
-    }
-
-    const result = await Match.superlikeUser(from_user, to_user);
-
-    if (result.result === 'matched') {
-      notifyMatch(from_user, to_user);
-    } else {
-      notifyLike(from_user, to_user, 'superliked');
-    }
-
-    const message = result.result === 'matched' ? "It's a Match!" : 'Superlike sent';
     res.status(200).json(apiResponse({ status: true, message, data: [result] }));
   } catch (err) {
     console.error(err);
