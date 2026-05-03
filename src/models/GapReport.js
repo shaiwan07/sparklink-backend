@@ -1,9 +1,18 @@
 const pool = require('../config/db');
 
+const CATEGORY_DESCRIPTIONS = {
+  'Relationship Goals': { high: 'Shared values around career and family', low: 'Different perspectives on relationship goals' },
+  'Family & Children': { high: "You're aligned on future family plans and having children", low: 'Different perspectives on family and children' },
+  'Shared Values': { high: 'You share similar values around family, loyalty, and long-term commitment', low: 'Different perspectives on core values' },
+  'Lifestyle': { high: 'Strong compatibility in daily lifestyle and habits', low: 'Different perspectives on smoking and alcohol use' },
+  'Personality': { high: 'Your personalities complement each other well', low: 'Different personality traits — worth exploring' },
+  'Communication': { high: 'Strong compatibility in love languages and emotional expression', low: 'Different communication styles — worth discussing' },
+  'Intimacy': { high: 'Aligned expectations around intimacy and closeness', low: 'Different perspectives on intimacy' },
+  'Compatibility': { high: 'Strong overall compatibility in key areas', low: 'Some areas worth discussing together' }
+};
+
 const GapReport = {
-  // Compute per-category compatibility between two matched users
   async get(matchId) {
-    // Get both users for this match
     const [matchRows] = await pool.query(
       'SELECT user1_id, user2_id FROM matches WHERE match_id = ?',
       [matchId]
@@ -12,7 +21,6 @@ const GapReport = {
 
     const { user1_id, user2_id } = matchRows[0];
 
-    // Get answers for both users with category info
     const [u1Answers] = await pool.query(
       `SELECT ua.question_id, ua.option_id, ua.answer, q.category_id, qc.name AS category_name
        FROM user_answers ua
@@ -31,11 +39,9 @@ const GapReport = {
       [user2_id]
     );
 
-    // Build lookup for user2 answers by question_id
     const u2Map = {};
     for (const a of u2Answers) u2Map[a.question_id] = a;
 
-    // Compute per-category scores
     const categoryScores = {};
     for (const a1 of u1Answers) {
       const a2 = u2Map[a1.question_id];
@@ -54,29 +60,35 @@ const GapReport = {
       if (match) categoryScores[cat].matched++;
     }
 
-    // Format result
-    const report = Object.values(categoryScores).map(c => ({
-      category: c.name,
-      percent: c.total > 0 ? Math.round((c.matched / c.total) * 100) : 0
-    }));
+    const report = Object.values(categoryScores).map(c => {
+      const percent = c.total > 0 ? Math.round((c.matched / c.total) * 100) : 0;
+      const desc = CATEGORY_DESCRIPTIONS[c.name];
+      return {
+        category: c.name,
+        percent,
+        description: desc ? (percent >= 60 ? desc.high : desc.low) : null
+      };
+    });
 
     return report;
   }
 };
 
 const MatchReasons = {
-  // Derive "Why Do We Match?" reasons from high-scoring categories
   async get(matchId) {
     const report = await GapReport.get(matchId);
-    const reasons = report
-      .filter(r => r.percent >= 60)
-      .map(r => `Strong alignment on ${r.category} (${r.percent}% match)`);
+    const reasons = [];
 
-    const gaps = report
-      .filter(r => r.percent < 60)
-      .map(r => `Different perspectives on ${r.category} — worth discussing`);
+    for (const r of report) {
+      const desc = CATEGORY_DESCRIPTIONS[r.category];
+      if (r.percent >= 60) {
+        reasons.push(desc ? desc.high : `Strong alignment on ${r.category}`);
+      } else {
+        reasons.push(desc ? desc.low : `Different perspectives on ${r.category}`);
+      }
+    }
 
-    return [...reasons, ...gaps];
+    return reasons;
   }
 };
 
