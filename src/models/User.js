@@ -141,7 +141,6 @@ const User = {
     `, [userId, userId, userId, userId, userId, userId, userId, userId]);
     return rows.map(r => r.excluded_id);
   },
-
   // Bulk-fetch all swipe + match data for a user in 3 queries.
   // Returns maps used to compute interaction_status without N+1 queries.
   async getInteractionMaps(userId) {
