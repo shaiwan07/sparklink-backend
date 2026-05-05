@@ -132,13 +132,13 @@ const User = {
       SELECT DISTINCT user1_id AS excluded_id
       FROM matches
       WHERE spark_mode = 1 AND status = 'matched'
-        AND user1_id != ?
+        AND user1_id != ? AND user2_id != ?
       UNION
       SELECT DISTINCT user2_id AS excluded_id
       FROM matches
       WHERE spark_mode = 1 AND status = 'matched'
-        AND user2_id != ?
-    `, [userId, userId, userId, userId, userId, userId]);
+        AND user1_id != ? AND user2_id != ?
+    `, [userId, userId, userId, userId, userId, userId, userId, userId]);
     return rows.map(r => r.excluded_id);
   },
 
@@ -154,7 +154,7 @@ const User = {
       [userId]
     );
     const [matchRows] = await pool.query(
-      `SELECT match_id, user1_id, user2_id FROM matches
+      `SELECT match_id, user1_id, user2_id, spark_mode FROM matches
        WHERE (user1_id = ? OR user2_id = ?) AND status = 'matched'`,
       [userId, userId]
     );
@@ -167,13 +167,15 @@ const User = {
 
     const matchedIds = new Set();
     const matchIdMap = new Map();
+    const sparkModeIds = new Set();
     for (const r of matchRows) {
       const otherId = r.user1_id === userId ? r.user2_id : r.user1_id;
       matchedIds.add(otherId);
       matchIdMap.set(otherId, r.match_id);
+      if (r.spark_mode === 1) sparkModeIds.add(otherId);
     }
 
-    return { mySwipes, theirSwipes, matchedIds, matchIdMap };
+    return { mySwipes, theirSwipes, matchedIds, matchIdMap, sparkModeIds };
   },
 
   async findPotentialMatches({ userId, gender, minAge, maxAge, excludedIds }) {

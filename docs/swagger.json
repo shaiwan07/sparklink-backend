@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://139.59.17.235:5000",
+      "url": "http://localhost:5000",
       "description": "Local development"
     }
   ],
@@ -732,7 +732,7 @@
           "Matches"
         ],
         "summary": "Get potential matches — screen 44",
-        "description": "Returns all verified users matching the caller's gender/age/distance preferences. Excludes blocked users and **users currently in Spark Mode** (locked in another match).\n\nEach candidate carries an `interaction_status` flag so Flutter can render the correct heart state without a second API call.\n\n**interaction_status values:**\n- `null` — no interaction yet\n- `i_liked` — caller already liked them\n- `i_disliked` — caller already disliked them\n- `they_liked` — they liked the caller (show indicator)\n- `matched` — mutual match confirmed\n\n**match_id** is non-null only when `interaction_status === 'matched'` — pass it to `GET /api/matches/{matchId}/profile`.\n\n**has_my_availability** / **has_their_availability** — booleans indicating whether each side has set time slots (today/tomorrow). Both must be true before a video call can be scheduled.\n\n**Spark Mode exclusion:** If a user is in Spark Mode (`spark_mode = 1` in any match), they will NOT appear in this list for other users.",
+        "description": "Returns all verified users matching the caller's gender/age/distance preferences. Excludes blocked users and **users currently in Spark Mode** (locked in another match).\n\nEach candidate carries an `interaction_status` flag so Flutter can render the correct heart state without a second API call.\n\n**interaction_status values:**\n- `null` — no interaction yet\n- `i_liked` — caller already liked them\n- `i_disliked` — caller already disliked them\n- `they_liked` — they liked the caller (show indicator)\n- `matched` — mutual match confirmed\n\n**match_id** is non-null only when `interaction_status === 'matched'` — pass it to `GET /api/matches/{matchId}/profile`.\n\n**has_my_availability** / **has_their_availability** — booleans indicating whether each side has set time slots (today/tomorrow). Both must be true before a video call can be scheduled.\n\n**Spark Mode exclusion:** If a user is in Spark Mode (`spark_mode = 1` in any match), they will NOT appear in this list for other users. However, the current user's own Spark Mode partner WILL appear with `spark_mode: 1` and is sorted to the top of the list.\n\n**spark_mode field:** `1` if this candidate is the caller's active Spark Mode partner, `0` otherwise.\n\n**Sort order:** spark_mode=1 first, then by interaction_status (they_liked → null → i_liked → matched → i_disliked), then by match_percentage desc.",
         "responses": {
           "200": {
             "description": "Candidates sorted: they_liked → null → liked → matched → disliked, then by match_percentage desc",
@@ -752,6 +752,7 @@
                       "city": "Tel Aviv",
                       "interaction_status": "they_liked",
                       "match_id": null,
+                      "spark_mode": 0,
                       "has_my_availability": true,
                       "has_their_availability": false
                     }

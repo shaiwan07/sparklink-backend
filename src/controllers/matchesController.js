@@ -62,7 +62,7 @@ exports.getPotentialMatches = async (req, res) => {
     });
 
     // Fetch all swipe/match data in 3 queries — no N+1
-    const { mySwipes, theirSwipes, matchedIds, matchIdMap } = await User.getInteractionMaps(userId);
+    const { mySwipes, theirSwipes, matchedIds, matchIdMap, sparkModeIds } = await User.getInteractionMaps(userId);
 
     // Batch availability check — 2 queries total regardless of candidate count
     const candidateIds = candidates.map(c => c.user_id);
@@ -106,14 +106,16 @@ exports.getPotentialMatches = async (req, res) => {
           candidate.user_id, mySwipes, theirSwipes, matchedIds
         ),
         match_id:                matchIdMap.get(candidate.user_id) ?? null,
+        spark_mode:              sparkModeIds.has(candidate.user_id) ? 1 : 0,
         has_my_availability,
         has_their_availability:  availableUserIds.has(candidate.user_id),
       });
     }
 
-    // Sort: unresponded first, then by match percentage
+    // Sort: spark_mode first, then by interaction status, then by match percentage
     const ORDER = { they_liked: 0, null: 1, i_liked: 2, matched: 3, i_disliked: 4 };
     results.sort((a, b) => {
+      if (a.spark_mode !== b.spark_mode) return b.spark_mode - a.spark_mode;
       const diff = (ORDER[a.interaction_status] ?? 1) - (ORDER[b.interaction_status] ?? 1);
       return diff !== 0 ? diff : b.match_percentage - a.match_percentage;
     });
